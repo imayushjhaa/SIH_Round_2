@@ -1,0 +1,1055 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "KH-754/2",
+      "properties": {
+        "khasra_no": "KH-754/2",
+        "village": "Rampur",
+        "project": "Dedicated Freight Corridor",
+        "stage": "Section 15 (Hearing)",
+        "risk_tier": "Critical",
+        "delay_days": 277,
+        "status_color": "red",
+        "statutory_days_left": 236,
+        "disbursement_pct": 0.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.915,
+              28.752
+            ],
+            [
+              76.916472,
+              28.752
+            ],
+            [
+              76.916472,
+              28.75299
+            ],
+            [
+              76.915,
+              28.75299
+            ],
+            [
+              76.915,
+              28.752
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-704/7",
+      "properties": {
+        "khasra_no": "KH-704/7",
+        "village": "Rampur",
+        "project": "NH-44 Expansion",
+        "stage": "Section 11 (Notice)",
+        "risk_tier": "High",
+        "delay_days": 91,
+        "status_color": "red",
+        "statutory_days_left": 239,
+        "disbursement_pct": 0.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9166,
+              28.752
+            ],
+            [
+              76.918072,
+              28.752
+            ],
+            [
+              76.918072,
+              28.75299
+            ],
+            [
+              76.9166,
+              28.75299
+            ],
+            [
+              76.9166,
+              28.752
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-325/8",
+      "properties": {
+        "khasra_no": "KH-325/8",
+        "village": "Sultanpur",
+        "project": "Dedicated Freight Corridor",
+        "stage": "Section 11 (Notice)",
+        "risk_tier": "Low",
+        "delay_days": 7,
+        "status_color": "green",
+        "statutory_days_left": -38,
+        "disbursement_pct": 0.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9182,
+              28.752
+            ],
+            [
+              76.919672,
+              28.752
+            ],
+            [
+              76.919672,
+              28.75299
+            ],
+            [
+              76.9182,
+              28.75299
+            ],
+            [
+              76.9182,
+              28.752
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-259/4",
+      "properties": {
+        "khasra_no": "KH-259/4",
+        "village": "Shahpur",
+        "project": "Dedicated Freight Corridor",
+        "stage": "Section 11 (Notice)",
+        "risk_tier": "Critical",
+        "delay_days": 243,
+        "status_color": "red",
+        "statutory_days_left": 303,
+        "disbursement_pct": 0.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9198,
+              28.752
+            ],
+            [
+              76.921272,
+              28.752
+            ],
+            [
+              76.921272,
+              28.75299
+            ],
+            [
+              76.9198,
+              28.75299
+            ],
+            [
+              76.9198,
+              28.752
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-144/8",
+      "properties": {
+        "khasra_no": "KH-144/8",
+        "village": "Sultanpur",
+        "project": "NH-44 Expansion",
+        "stage": "Award Enquiry",
+        "risk_tier": "Critical",
+        "delay_days": 184,
+        "status_color": "red",
+        "statutory_days_left": 310,
+        "disbursement_pct": 34.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9214,
+              28.752
+            ],
+            [
+              76.922872,
+              28.752
+            ],
+            [
+              76.922872,
+              28.75299
+            ],
+            [
+              76.9214,
+              28.75299
+            ],
+            [
+              76.9214,
+              28.752
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-296/2",
+      "properties": {
+        "khasra_no": "KH-296/2",
+        "village": "Rampur",
+        "project": "Delhi-Amritsar Expressway",
+        "stage": "Section 19 (Declaration)",
+        "risk_tier": "Low",
+        "delay_days": 0,
+        "status_color": "green",
+        "statutory_days_left": 310,
+        "disbursement_pct": 86.3
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.915,
+              28.7531
+            ],
+            [
+              76.916472,
+              28.7531
+            ],
+            [
+              76.916472,
+              28.75409
+            ],
+            [
+              76.915,
+              28.75409
+            ],
+            [
+              76.915,
+              28.7531
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-954/6",
+      "properties": {
+        "khasra_no": "KH-954/6",
+        "village": "Kalyanpur",
+        "project": "Dedicated Freight Corridor",
+        "stage": "Section 19 (Declaration)",
+        "risk_tier": "Low",
+        "delay_days": 5,
+        "status_color": "green",
+        "statutory_days_left": 243,
+        "disbursement_pct": 75.6
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9166,
+              28.7531
+            ],
+            [
+              76.918072,
+              28.7531
+            ],
+            [
+              76.918072,
+              28.75409
+            ],
+            [
+              76.9166,
+              28.75409
+            ],
+            [
+              76.9166,
+              28.7531
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-750/3",
+      "properties": {
+        "khasra_no": "KH-750/3",
+        "village": "Sultanpur",
+        "project": "Delhi-Amritsar Expressway",
+        "stage": "Section 15 (Hearing)",
+        "risk_tier": "Low",
+        "delay_days": 4,
+        "status_color": "green",
+        "statutory_days_left": 114,
+        "disbursement_pct": 0.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9182,
+              28.7531
+            ],
+            [
+              76.919672,
+              28.7531
+            ],
+            [
+              76.919672,
+              28.75409
+            ],
+            [
+              76.9182,
+              28.75409
+            ],
+            [
+              76.9182,
+              28.7531
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-963/1",
+      "properties": {
+        "khasra_no": "KH-963/1",
+        "village": "Kalyanpur",
+        "project": "NH-44 Expansion",
+        "stage": "Section 19 (Declaration)",
+        "risk_tier": "High",
+        "delay_days": 95,
+        "status_color": "red",
+        "statutory_days_left": 145,
+        "disbursement_pct": 43.7
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9198,
+              28.7531
+            ],
+            [
+              76.921272,
+              28.7531
+            ],
+            [
+              76.921272,
+              28.75409
+            ],
+            [
+              76.9198,
+              28.75409
+            ],
+            [
+              76.9198,
+              28.7531
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-771/8",
+      "properties": {
+        "khasra_no": "KH-771/8",
+        "village": "Mehrauli Dehat",
+        "project": "PMGSY Phase-3 Link Road",
+        "stage": "Section 15 (Hearing)",
+        "risk_tier": "Medium",
+        "delay_days": 83,
+        "status_color": "yellow",
+        "statutory_days_left": 215,
+        "disbursement_pct": 0.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9214,
+              28.7531
+            ],
+            [
+              76.922872,
+              28.7531
+            ],
+            [
+              76.922872,
+              28.75409
+            ],
+            [
+              76.9214,
+              28.75409
+            ],
+            [
+              76.9214,
+              28.7531
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-538/7",
+      "properties": {
+        "khasra_no": "KH-538/7",
+        "village": "Bhatinda Khurd",
+        "project": "Delhi-Amritsar Expressway",
+        "stage": "Section 15 (Hearing)",
+        "risk_tier": "Low",
+        "delay_days": 0,
+        "status_color": "green",
+        "statutory_days_left": 90,
+        "disbursement_pct": 0.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.915,
+              28.7542
+            ],
+            [
+              76.916472,
+              28.7542
+            ],
+            [
+              76.916472,
+              28.75519
+            ],
+            [
+              76.915,
+              28.75519
+            ],
+            [
+              76.915,
+              28.7542
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-796/7",
+      "properties": {
+        "khasra_no": "KH-796/7",
+        "village": "Sultanpur",
+        "project": "NH-44 Expansion",
+        "stage": "Award Enquiry",
+        "risk_tier": "Critical",
+        "delay_days": 555,
+        "status_color": "red",
+        "statutory_days_left": 155,
+        "disbursement_pct": 21.4
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9166,
+              28.7542
+            ],
+            [
+              76.918072,
+              28.7542
+            ],
+            [
+              76.918072,
+              28.75519
+            ],
+            [
+              76.9166,
+              28.75519
+            ],
+            [
+              76.9166,
+              28.7542
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-448/2",
+      "properties": {
+        "khasra_no": "KH-448/2",
+        "village": "Bhatinda Khurd",
+        "project": "PMGSY Phase-3 Link Road",
+        "stage": "Section 15 (Hearing)",
+        "risk_tier": "Medium",
+        "delay_days": 61,
+        "status_color": "yellow",
+        "statutory_days_left": 118,
+        "disbursement_pct": 0.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9182,
+              28.7542
+            ],
+            [
+              76.919672,
+              28.7542
+            ],
+            [
+              76.919672,
+              28.75519
+            ],
+            [
+              76.9182,
+              28.75519
+            ],
+            [
+              76.9182,
+              28.7542
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-740/5",
+      "properties": {
+        "khasra_no": "KH-740/5",
+        "village": "Shahpur",
+        "project": "Delhi-Amritsar Expressway",
+        "stage": "Section 15 (Hearing)",
+        "risk_tier": "Low",
+        "delay_days": 4,
+        "status_color": "green",
+        "statutory_days_left": 159,
+        "disbursement_pct": 0.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9198,
+              28.7542
+            ],
+            [
+              76.921272,
+              28.7542
+            ],
+            [
+              76.921272,
+              28.75519
+            ],
+            [
+              76.9198,
+              28.75519
+            ],
+            [
+              76.9198,
+              28.7542
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-643/1",
+      "properties": {
+        "khasra_no": "KH-643/1",
+        "village": "Sultanpur",
+        "project": "Dedicated Freight Corridor",
+        "stage": "Award Enquiry",
+        "risk_tier": "Critical",
+        "delay_days": 287,
+        "status_color": "red",
+        "statutory_days_left": 341,
+        "disbursement_pct": 53.6
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9214,
+              28.7542
+            ],
+            [
+              76.922872,
+              28.7542
+            ],
+            [
+              76.922872,
+              28.75519
+            ],
+            [
+              76.9214,
+              28.75519
+            ],
+            [
+              76.9214,
+              28.7542
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-878/9",
+      "properties": {
+        "khasra_no": "KH-878/9",
+        "village": "Shahpur",
+        "project": "Delhi-Amritsar Expressway",
+        "stage": "Section 15 (Hearing)",
+        "risk_tier": "High",
+        "delay_days": 141,
+        "status_color": "red",
+        "statutory_days_left": 13,
+        "disbursement_pct": 0.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.915,
+              28.7553
+            ],
+            [
+              76.916472,
+              28.7553
+            ],
+            [
+              76.916472,
+              28.75629
+            ],
+            [
+              76.915,
+              28.75629
+            ],
+            [
+              76.915,
+              28.7553
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-721/7",
+      "properties": {
+        "khasra_no": "KH-721/7",
+        "village": "Kalyanpur",
+        "project": "Delhi-Amritsar Expressway",
+        "stage": "Section 19 (Declaration)",
+        "risk_tier": "High",
+        "delay_days": 106,
+        "status_color": "red",
+        "statutory_days_left": 146,
+        "disbursement_pct": 72.2
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9166,
+              28.7553
+            ],
+            [
+              76.918072,
+              28.7553
+            ],
+            [
+              76.918072,
+              28.75629
+            ],
+            [
+              76.9166,
+              28.75629
+            ],
+            [
+              76.9166,
+              28.7553
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-353/4",
+      "properties": {
+        "khasra_no": "KH-353/4",
+        "village": "Rampur",
+        "project": "Dedicated Freight Corridor",
+        "stage": "Section 11 (Notice)",
+        "risk_tier": "Critical",
+        "delay_days": 401,
+        "status_color": "red",
+        "statutory_days_left": 49,
+        "disbursement_pct": 0.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9182,
+              28.7553
+            ],
+            [
+              76.919672,
+              28.7553
+            ],
+            [
+              76.919672,
+              28.75629
+            ],
+            [
+              76.9182,
+              28.75629
+            ],
+            [
+              76.9182,
+              28.7553
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-334/2",
+      "properties": {
+        "khasra_no": "KH-334/2",
+        "village": "Rampur",
+        "project": "Dedicated Freight Corridor",
+        "stage": "Section 11 (Notice)",
+        "risk_tier": "Critical",
+        "delay_days": 335,
+        "status_color": "red",
+        "statutory_days_left": 87,
+        "disbursement_pct": 0.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9198,
+              28.7553
+            ],
+            [
+              76.921272,
+              28.7553
+            ],
+            [
+              76.921272,
+              28.75629
+            ],
+            [
+              76.9198,
+              28.75629
+            ],
+            [
+              76.9198,
+              28.7553
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-684/8",
+      "properties": {
+        "khasra_no": "KH-684/8",
+        "village": "Kalyanpur",
+        "project": "PMGSY Phase-3 Link Road",
+        "stage": "Award Enquiry",
+        "risk_tier": "Medium",
+        "delay_days": 63,
+        "status_color": "yellow",
+        "statutory_days_left": 253,
+        "disbursement_pct": 72.8
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9214,
+              28.7553
+            ],
+            [
+              76.922872,
+              28.7553
+            ],
+            [
+              76.922872,
+              28.75629
+            ],
+            [
+              76.9214,
+              28.75629
+            ],
+            [
+              76.9214,
+              28.7553
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-846/1",
+      "properties": {
+        "khasra_no": "KH-846/1",
+        "village": "Fatehpur",
+        "project": "NH-44 Expansion",
+        "stage": "Section 11 (Notice)",
+        "risk_tier": "High",
+        "delay_days": 123,
+        "status_color": "red",
+        "statutory_days_left": 144,
+        "disbursement_pct": 0.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.915,
+              28.7564
+            ],
+            [
+              76.916472,
+              28.7564
+            ],
+            [
+              76.916472,
+              28.75739
+            ],
+            [
+              76.915,
+              28.75739
+            ],
+            [
+              76.915,
+              28.7564
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-294/9",
+      "properties": {
+        "khasra_no": "KH-294/9",
+        "village": "Mehrauli Dehat",
+        "project": "Delhi-Amritsar Expressway",
+        "stage": "Award Enquiry",
+        "risk_tier": "Medium",
+        "delay_days": 38,
+        "status_color": "yellow",
+        "statutory_days_left": 257,
+        "disbursement_pct": 46.2
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9166,
+              28.7564
+            ],
+            [
+              76.918072,
+              28.7564
+            ],
+            [
+              76.918072,
+              28.75739
+            ],
+            [
+              76.9166,
+              28.75739
+            ],
+            [
+              76.9166,
+              28.7564
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-663/2",
+      "properties": {
+        "khasra_no": "KH-663/2",
+        "village": "Rampur",
+        "project": "NH-44 Expansion",
+        "stage": "Section 11 (Notice)",
+        "risk_tier": "Low",
+        "delay_days": 0,
+        "status_color": "green",
+        "statutory_days_left": -35,
+        "disbursement_pct": 0.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9182,
+              28.7564
+            ],
+            [
+              76.919672,
+              28.7564
+            ],
+            [
+              76.919672,
+              28.75739
+            ],
+            [
+              76.9182,
+              28.75739
+            ],
+            [
+              76.9182,
+              28.7564
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-318/7",
+      "properties": {
+        "khasra_no": "KH-318/7",
+        "village": "Rampur",
+        "project": "Delhi-Amritsar Expressway",
+        "stage": "Award Enquiry",
+        "risk_tier": "High",
+        "delay_days": 129,
+        "status_color": "red",
+        "statutory_days_left": 349,
+        "disbursement_pct": 14.3
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9198,
+              28.7564
+            ],
+            [
+              76.921272,
+              28.7564
+            ],
+            [
+              76.921272,
+              28.75739
+            ],
+            [
+              76.9198,
+              28.75739
+            ],
+            [
+              76.9198,
+              28.7564
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KH-848/9",
+      "properties": {
+        "khasra_no": "KH-848/9",
+        "village": "Fatehpur",
+        "project": "PMGSY Phase-3 Link Road",
+        "stage": "Section 15 (Hearing)",
+        "risk_tier": "Low",
+        "delay_days": 4,
+        "status_color": "green",
+        "statutory_days_left": 253,
+        "disbursement_pct": 0.0
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9214,
+              28.7564
+            ],
+            [
+              76.922872,
+              28.7564
+            ],
+            [
+              76.922872,
+              28.75739
+            ],
+            [
+              76.9214,
+              28.75739
+            ],
+            [
+              76.9214,
+              28.7564
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
