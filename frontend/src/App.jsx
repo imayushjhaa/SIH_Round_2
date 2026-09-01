@@ -1,0 +1,398 @@
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
+import { 
+  AlertTriangle, 
+  CheckCircle2, 
+  Clock, 
+  TrendingDown, 
+  Layers, 
+  Sliders, 
+  Scale,
+  FileText,
+  Printer,
+  X
+} from "lucide-react";
+
+const BACKEND_URL = "http://127.0.0.1:8000";
+
+export default function App() {
+  const [summary, setSummary] = useState(null);
+  const [geoData, setGeoData] = useState(null);
+  const [selectedPlot, setSelectedPlot] = useState(null);
+  const [plotDetails, setPlotDetails] = useState(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [showNoticeModal, setShowNoticeModal] = useState(false);
+
+  // What-If Simulation State
+  const [simDisbursement, setSimDisbursement] = useState(50);
+  const [resolveKhata, setResolveKhata] = useState(false);
+  const [resolveForest, setResolveForest] = useState(false);
+  const [simResult, setSimResult] = useState(null);
+
+  useEffect(() => {
+    axios.get(`${BACKEND_URL}/api/dashboard/summary`)
+      .then(res => setSummary(res.data))
+      .catch(err => console.error("Summary error:", err));
+
+    axios.get(`${BACKEND_URL}/api/parcels`)
+      .then(res => setGeoData(res.data))
+      .catch(err => console.error("GeoJSON error:", err));
+  }, []);
+
+  const handleParcelClick = (khasraNo) => {
+    setSelectedPlot(khasraNo);
+    setLoadingDetails(true);
+    setSimResult(null);
+
+    axios.get(`${BACKEND_URL}/api/plot/${encodeURIComponent(khasraNo)}`)
+      .then(res => {
+        setPlotDetails(res.data);
+        setSimDisbursement(res.data.plot_info.disbursement_pct);
+        setResolveKhata(res.data.plot_info.unpartitioned_khata === 1);
+        setResolveForest(false);
+      })
+      .catch(err => console.error("Plot details error:", err))
+      .finally(() => setLoadingDetails(false));
+  };
+
+  const runSimulation = () => {
+    if (!selectedPlot) return;
+    axios.post(`${BACKEND_URL}/api/simulate`, {
+      khasra_no: selectedPlot,
+      simulated_disbursement_pct: parseFloat(simDisbursement),
+      resolve_khata: resolveKhata,
+      resolve_forest: resolveForest
+    })
+      .then(res => setSimResult(res.data))
+      .catch(err => console.error("Simulation error:", err));
+  };
+
+  const polygonStyle = (feature) => {
+    const color = feature.properties.status_color;
+    return {
+      fillColor: color === "red" ? "#ef4444" : color === "yellow" ? "#eab308" : "#22c55e",
+      weight: 2,
+      opacity: 0.9,
+      color: "#ffffff",
+      dashArray: "3",
+      fillOpacity: 0.4
+    };
+  };
+
+  return (
+    <div className="flex flex-col h-screen bg-slate-100 font-sans text-slate-800">
+      {/* Top Header */}
+      <header className="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shadow-md">
+        <div>
+          <h1 className="text-xl font-bold tracking-wide flex items-center gap-2">
+            <Scale className="text-amber-400" size={24} />
+            PRAGATI-Land : Statutory Compliance & Delay Mitigation Engine
+          </h1>
+          <p className="text-xs text-slate-400">
+            RFCTLARR Act 2013 Statutory Timeline Monitor & Decision Support System
+          </p>
+        </div>
+        <div className="text-xs bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 text-amber-300 font-medium">
+          Active Stretch: {summary?.active_corridor || "Loading..."}
+        </div>
+      </header>
+
+      {/* Summary KPI Cards */}
+      <div className="grid grid-cols-4 gap-4 px-6 py-3 bg-white border-b border-slate-200">
+        <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <p className="text-xs text-slate-500 font-medium">Total Land Parcels</p>
+          <p className="text-2xl font-bold text-slate-800 mt-1">{summary?.total_parcels ?? "--"}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">Contiguous Corridor Sector</p>
+        </div>
+
+        <div className="p-3 bg-red-50/70 border border-red-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-red-700 font-semibold flex items-center gap-1.5">
+              <AlertTriangle size={14} className="text-red-500" /> Section 19 Lapse Alert
+            </p>
+            <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+              &lt; 45 Days
+            </span>
+          </div>
+          <p className="text-2xl font-bold text-red-700 mt-1">{summary?.critical_lapsing_parcels ?? "--"}</p>
+          <p className="text-[11px] text-red-500/80 mt-0.5">Parcels nearing statutory cancellation</p>
+        </div>
+
+        <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-lg">
+          <p className="text-xs text-amber-700 font-medium">High Delay Risk Parcels</p>
+          <p className="text-2xl font-bold text-amber-800 mt-1">{summary?.high_risk_parcels ?? "--"}</p>
+          <p className="text-[11px] text-amber-600/80 mt-0.5">Predicted delay exceeding 90 days</p>
+        </div>
+
+        <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-lg">
+          <p className="text-xs text-emerald-700 font-medium">Avg Disbursement Velocity</p>
+          <p className="text-2xl font-bold text-emerald-800 mt-1">{summary?.avg_disbursement_pct ?? "--"}%</p>
+          <p className="text-[11px] text-emerald-600/80 mt-0.5">Award compensation cleared</p>
+        </div>
+      </div>
+
+      {/* Main Workspace */}
+      <div className="flex flex-1 overflow-hidden p-4 gap-4">
+        {/* Left Side: Cadastral Satellite Map */}
+        <div className="w-2/3 h-full relative rounded-xl overflow-hidden shadow-md border border-slate-300">
+          <div className="absolute top-3 left-12 z-[1000] bg-slate-900/90 text-white px-3 py-2 rounded-md shadow-md border border-slate-700 text-xs flex gap-3 backdrop-blur-sm">
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-emerald-500 rounded-sm inline-block"></span> Safe / Possession</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-amber-500 rounded-sm inline-block"></span> Notice / Under Review</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-red-500 rounded-sm inline-block"></span> Dispute / Legal Risk</span>
+          </div>
+
+          {geoData && (
+            <MapContainer 
+              key="satellite-map"
+              center={[28.7545, 76.9185]} 
+              zoom={16} 
+              maxZoom={19}
+              scrollWheelZoom={true} 
+              className="w-full h-full"
+            >
+              <TileLayer
+                attribution='Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics'
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              />
+              <GeoJSON
+                key={JSON.stringify(geoData)}
+                data={geoData}
+                style={polygonStyle}
+                onEachFeature={(feature, layer) => {
+                  layer.bindTooltip(
+                    `<strong>${feature.properties.khasra_no}</strong><br/>${feature.properties.village}`,
+                    { direction: "top", opacity: 0.9 }
+                  );
+                  layer.on({
+                    click: () => handleParcelClick(feature.properties.khasra_no)
+                  });
+                }}
+              />
+            </MapContainer>
+          )}
+        </div>
+
+        {/* Right Side: Analytical & Prescriptive Drawer */}
+        <div className="w-1/3 h-full overflow-y-auto p-5 bg-white rounded-xl shadow-md border border-slate-200 space-y-4">
+          {!selectedPlot ? (
+            <div className="h-full flex flex-col items-center justify-center text-center text-slate-400">
+              <Layers size={48} className="mb-2 text-slate-300" />
+              <p className="font-medium">Select any Land Parcel (Khasra) on the map</p>
+              <p className="text-xs">Click a polygon to inspect AI predictions & recommendations</p>
+            </div>
+          ) : loadingDetails ? (
+            <p className="text-sm text-slate-500">Evaluating bottlenecks & running SHAP models...</p>
+          ) : plotDetails && (
+            <>
+              {/* Parcel Header */}
+              <div className="border-b border-slate-200 pb-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">{plotDetails.plot_info.khasra_no}</h2>
+                    <p className="text-xs text-slate-500">Village: {plotDetails.plot_info.village} | {plotDetails.plot_info.project}</p>
+                  </div>
+                  <span className={`text-xs px-2.5 py-1 rounded font-semibold ${
+                    plotDetails.plot_info.risk_tier === "Critical" ? "bg-red-100 text-red-700 border border-red-300" :
+                    plotDetails.plot_info.risk_tier === "High" ? "bg-amber-100 text-amber-700 border border-amber-300" : "bg-emerald-100 text-emerald-700"
+                  }`}>
+                    {plotDetails.plot_info.risk_tier} Risk
+                  </span>
+                </div>
+
+                <div className="mt-2 flex items-center justify-between text-xs bg-slate-50 p-2 rounded border border-slate-200">
+                  <span className="text-slate-600">Statutory Limit Countdown:</span>
+                  <span className={`font-bold ${plotDetails.plot_info.statutory_days_left < 45 ? "text-red-600" : "text-slate-800"}`}>
+                    {plotDetails.plot_info.statutory_days_left} Days Left
+                  </span>
+                </div>
+              </div>
+
+              {/* Predicted Delay */}
+              <div className="bg-slate-900 text-white p-3 rounded-lg flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-slate-400">Predicted Lifecycle Delay</p>
+                  <p className="text-2xl font-bold text-amber-400">{plotDetails.predicted_delay_days} Days</p>
+                </div>
+                <Clock className="text-slate-500" size={32} />
+              </div>
+
+              {/* Explainable AI (SHAP Breakdown) */}
+              <div>
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  Key Delay Drivers (Explainable AI - TreeSHAP)
+                </h3>
+                <div className="space-y-2">
+                  {plotDetails.shap_breakdown.map((item, idx) => (
+                    <div key={idx} className="text-xs bg-slate-50 p-2 rounded border border-slate-200">
+                      <div className="flex justify-between font-medium mb-1">
+                        <span className="text-slate-700 capitalize">{item.factor.replace(/_/g, " ")}</span>
+                        <span className="text-red-600 font-bold">+{item.impact_days} days ({item.contribution_pct}%)</span>
+                      </div>
+                      <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-red-500 h-full" style={{ width: `${item.contribution_pct}%` }}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Prescriptive Recommendation Card */}
+              <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg">
+                <div className="flex items-center gap-1.5 text-amber-800 font-bold text-xs uppercase mb-1">
+                  <CheckCircle2 size={16} className="text-amber-600" /> Prescriptive Administrative Action
+                </div>
+                <p className="text-xs font-semibold text-slate-900">{plotDetails.prescriptive_recommendation.action_title}</p>
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                  {plotDetails.prescriptive_recommendation.description}
+                </p>
+                <div className="mt-2 text-[11px] text-amber-900 font-medium">
+                  Assigned To: <span className="font-bold">{plotDetails.prescriptive_recommendation.recommended_officer}</span>
+                </div>
+
+                {/* One-Click Notice Generation Trigger */}
+                <button
+                  onClick={() => setShowNoticeModal(true)}
+                  className="mt-3 w-full flex items-center justify-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold py-2 px-3 rounded shadow-sm transition-colors"
+                >
+                  <FileText size={14} /> Generate Statutory Order / Notice Draft
+                </button>
+              </div>
+
+              {/* What-If Counterfactual Simulator */}
+              <div className="p-3 bg-slate-50 border border-slate-300 rounded-lg space-y-3">
+                <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs">
+                  <Sliders size={16} className="text-slate-600" /> "What-If" Mitigation Simulator
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span>Disbursement Target:</span>
+                    <span className="font-bold">{simDisbursement}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={simDisbursement}
+                    onChange={(e) => setSimDisbursement(e.target.value)}
+                    className="w-full cursor-pointer"
+                  />
+                </div>
+
+                <div className="space-y-1 text-xs">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={!resolveKhata}
+                      onChange={(e) => setResolveKhata(!e.target.checked)}
+                    />
+                    Resolve Succession / Title Dispute
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={resolveForest}
+                      onChange={(e) => setResolveForest(e.target.checked)}
+                    />
+                    Expedite Stage-II Forest Clearance
+                  </label>
+                </div>
+
+                <button
+                  onClick={runSimulation}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 rounded transition-colors"
+                >
+                  Simulate Intervention
+                </button>
+
+                {simResult && (
+                  <div className="mt-2 p-2 bg-emerald-50 border border-emerald-300 rounded text-xs">
+                    <div className="flex items-center justify-between font-bold text-emerald-800">
+                      <span>New Delay: {simResult.new_predicted_delay_days} Days</span>
+                      <span className="text-emerald-700 flex items-center">
+                        <TrendingDown size={14} className="mr-0.5" /> Saved: {simResult.days_saved} Days
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Official Government Notice / Memo Modal */}
+      {showNoticeModal && plotDetails && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full border border-slate-300 overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Modal Actions Header */}
+            <div className="bg-slate-900 text-white px-6 py-3 flex justify-between items-center">
+              <span className="text-xs uppercase tracking-wider font-semibold text-amber-400 flex items-center gap-1.5">
+                <FileText size={16} /> Automated Administrative Order Draft
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => window.print()}
+                  className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-2.5 py-1 rounded flex items-center gap-1 border border-slate-700"
+                >
+                  <Printer size={13} /> Print Memo
+                </button>
+                <button
+                  onClick={() => setShowNoticeModal(false)}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Official Letterhead & Body */}
+            <div className="p-8 overflow-y-auto space-y-4 text-slate-800 font-serif text-sm leading-relaxed">
+              <div className="text-center border-b border-slate-300 pb-3">
+                <h3 className="font-bold text-base tracking-wide uppercase">Office of the Competent Authority for Land Acquisition (CALA)</h3>
+                <p className="text-xs font-sans text-slate-500">Government of Haryana / Revenue & Disaster Management Department</p>
+                <p className="text-[11px] font-sans text-slate-400 mt-0.5">Under Right to Fair Compensation and Transparency in Land Acquisition (RFCTLARR) Act, 2013</p>
+              </div>
+
+              <div className="flex justify-between font-sans text-xs pt-1">
+                <span><strong>Order Ref:</strong> CALA/REV/{plotDetails.plot_info.khasra_no.replace('/', '-')}/2026</span>
+                <span><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</span>
+              </div>
+
+              <div className="font-sans text-xs bg-slate-50 p-2.5 rounded border border-slate-200">
+                <p><strong>To:</strong> {plotDetails.prescriptive_recommendation.recommended_officer}</p>
+                <p><strong>Subject:</strong> Immediate statutory direction regarding Khasra No. <strong>{plotDetails.plot_info.khasra_no}</strong>, Village {plotDetails.plot_info.village} ({plotDetails.plot_info.project}).</p>
+              </div>
+
+              <p>
+                Whereas, land acquisition proceedings are actively underway for the National Corridor Project under the RFCTLARR Act, 2013. The statutory monitoring engine has flagged parcel <strong>{plotDetails.plot_info.khasra_no}</strong> as critical, having only <strong>{plotDetails.plot_info.statutory_days_left} days</strong> remaining prior to statutory lapsing.
+              </p>
+
+              <div className="bg-amber-50/70 border-l-4 border-amber-500 p-3 font-sans text-xs">
+                <p className="font-bold text-amber-900 mb-0.5">Mandated Administrative Directive:</p>
+                <p className="text-slate-700">{plotDetails.prescriptive_recommendation.description}</p>
+              </div>
+
+              <p>
+                You are hereby directed to execute <strong>{plotDetails.prescriptive_recommendation.action_title}</strong> within 7 working days from the issuance of this order. Failure to comply may result in statutory lapsing under Section 19(7) / 25 of the Act, causing substantial public exchequer loss.
+              </p>
+
+              <div className="pt-6 flex justify-between items-end font-sans text-xs">
+                <div>
+                  <p className="text-[11px] text-slate-400">Generated automatically by</p>
+                  <p className="font-semibold text-slate-700">PRAGATI-Land DSS Engine</p>
+                </div>
+                <div className="text-right">
+                  <div className="h-10 border-b border-dotted border-slate-400 w-40 ml-auto mb-1"></div>
+                  <p className="font-bold text-slate-800">Competent Authority / DM</p>
+                  <p className="text-[11px] text-slate-500">Seal & Signature</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
