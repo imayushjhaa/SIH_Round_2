@@ -6,6 +6,7 @@ import joblib
 import pandas as pd
 from pydantic import BaseModel
 import shap
+from prompt_pipeline import generate_dynamic_mitigation_steps
 
 app = FastAPI(title="SIH26017 Land Acquisition Analytics Engine")
 
@@ -161,7 +162,7 @@ def get_summary():
     }
 
 
-# Endpoint 3: Specific Plot Details + SHAP Explanation + Prescriptive Action
+# Endpoint 3: Specific Plot Details + SHAP Explanation + Prescriptive Action + GenAI Ground Plan
 @app.get("/api/plot/{khasra_no:path}")
 def get_plot_details(khasra_no: str):
     if khasra_no not in raw_plots:
@@ -199,11 +200,21 @@ def get_plot_details(khasra_no: str):
     top_factor = impacts[0]["factor"] if impacts else "none"
     prescriptive_action = get_prescriptive_action(top_factor, plot)
 
+    # Live GenAI 3-Step Mitigation Call
+    ai_steps = generate_dynamic_mitigation_steps(
+        khasra_no=plot["khasra_no"],
+        project_name=plot["project"],
+        delay_days=max(0, round(predicted_delay)),
+        shap_drivers=impacts,
+        fallback_action=prescriptive_action,
+    )
+
     return {
         "plot_info": plot,
         "predicted_delay_days": max(0, round(predicted_delay)),
         "shap_breakdown": impacts,
         "prescriptive_recommendation": prescriptive_action,
+        "ai_mitigation_steps": ai_steps,
     }
 
 
