@@ -1,0 +1,5 @@
+project_id,project_name,district,state,latitude,longitude,land_area_acres,affected_families,comp_offered_lakhs,comp_demanded_lakhs,litigation_cases,forest_clearance_status,stage
+PRJ_101,NH-66 Expansion,Raigad,Maharashtra,18.5158,73.1812,120.5,450,1200.0,1800.0,4,Pending,Compensation Disbursal
+PRJ_102,Metro Line 4 Extension,Thane,Maharashtra,19.2183,72.9781,45.2,120,850.0,900.0,1,Approved,Land Survey
+PRJ_103,Greenfield Solar Park,Kutch,Gujarat,23.7337,69.8597,500.0,80,3000.0,5500.0,12,Rejected,Section 4 Notification
+PRJ_104,Freight Corridor Section B,Alwar,Rajasthan,27.5530,76.6346,210.0,600,2400.0,2600.0,2,Approved,Possession Transfer
