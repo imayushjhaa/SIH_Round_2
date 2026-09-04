@@ -11,7 +11,10 @@ import {
   Scale,
   FileText,
   Printer,
-  X
+  X,
+  Sparkles,
+  Search,
+  Filter
 } from "lucide-react";
 
 const BACKEND_URL = "http://127.0.0.1:8000";
@@ -23,6 +26,10 @@ export default function App() {
   const [plotDetails, setPlotDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [showNoticeModal, setShowNoticeModal] = useState(false);
+
+  // Search & Filter State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState("ALL"); // "ALL" | "LAPSE" | "HIGH_RISK"
 
   // What-If Simulation State
   const [simDisbursement, setSimDisbursement] = useState(50);
@@ -56,6 +63,17 @@ export default function App() {
       .finally(() => setLoadingDetails(false));
   };
 
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim() || !geoData) return;
+    const found = geoData.features.find(f => 
+      f.properties.khasra_no.toLowerCase().includes(searchQuery.trim().toLowerCase())
+    );
+    if (found) {
+      handleParcelClick(found.properties.khasra_no);
+    }
+  };
+
   const runSimulation = () => {
     if (!selectedPlot) return;
     axios.post(`${BACKEND_URL}/api/simulate`, {
@@ -69,14 +87,36 @@ export default function App() {
   };
 
   const polygonStyle = (feature) => {
-    const color = feature.properties.status_color;
+    const props = feature.properties;
+    const isSelected = selectedPlot === props.khasra_no;
+    
+    // Check Filter Criteria
+    let matchesFilter = true;
+    if (activeFilter === "LAPSE") {
+      matchesFilter = props.statutory_days_left < 45 && props.stage !== "Possession Taken";
+    } else if (activeFilter === "HIGH_RISK") {
+      matchesFilter = props.risk_tier === "Critical" || props.risk_tier === "High" || props.status_color === "red";
+    }
+
+    // Check Search Query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      matchesFilter = matchesFilter && (
+        props.khasra_no.toLowerCase().includes(q) || 
+        (props.village && props.village.toLowerCase().includes(q))
+      );
+    }
+
+    const color = props.status_color;
+    const baseFill = color === "red" ? "#ef4444" : color === "yellow" ? "#eab308" : "#22c55e";
+
     return {
-      fillColor: color === "red" ? "#ef4444" : color === "yellow" ? "#eab308" : "#22c55e",
-      weight: 2,
-      opacity: 0.9,
-      color: "#ffffff",
-      dashArray: "3",
-      fillOpacity: 0.4
+      fillColor: baseFill,
+      weight: isSelected ? 3.5 : 1.5,
+      opacity: matchesFilter ? 0.95 : 0.2,
+      color: isSelected ? "#38bdf8" : "#ffffff",
+      dashArray: isSelected ? "" : "3",
+      fillOpacity: matchesFilter ? (isSelected ? 0.75 : 0.45) : 0.08
     };
   };
 
@@ -136,10 +176,62 @@ export default function App() {
       <div className="flex flex-1 overflow-hidden p-4 gap-4">
         {/* Left Side: Cadastral Satellite Map */}
         <div className="w-2/3 h-full relative rounded-xl overflow-hidden shadow-md border border-slate-300">
+          
+          {/* Map Controls: Search & Filter Toolbar */}
+          <div className="absolute top-3 right-3 z-[1000] flex items-center gap-2">
+            <form onSubmit={handleSearchSubmit} className="relative">
+              <input
+                type="text"
+                placeholder="Search Khasra (e.g. KH-643)..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-slate-900/90 text-white text-xs px-3 py-2 pl-8 rounded-lg border border-slate-700 placeholder-slate-400 focus:outline-none focus:border-amber-400 shadow-md backdrop-blur-sm w-44 transition-all focus:w-52"
+              />
+              <Search size={13} className="absolute left-2.5 top-2.5 text-slate-400" />
+            </form>
+
+            <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-lg border border-slate-700 backdrop-blur-sm shadow-md text-xs">
+              <button
+                type="button"
+                onClick={() => setActiveFilter("ALL")}
+                className={`px-2 py-1 rounded font-medium transition-all ${
+                  activeFilter === "ALL" 
+                    ? "bg-amber-400 text-slate-950 font-bold" 
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilter("LAPSE")}
+                className={`px-2 py-1 rounded font-medium flex items-center gap-1 transition-all ${
+                  activeFilter === "LAPSE" 
+                    ? "bg-red-500 text-white font-bold" 
+                    : "text-red-300 hover:text-white"
+                }`}
+              >
+                &lt;45d Lapse
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilter("HIGH_RISK")}
+                className={`px-2 py-1 rounded font-medium transition-all ${
+                  activeFilter === "HIGH_RISK" 
+                    ? "bg-amber-500 text-white font-bold" 
+                    : "text-amber-300 hover:text-white"
+                }`}
+              >
+                High Risk
+              </button>
+            </div>
+          </div>
+
+          {/* Map Legend */}
           <div className="absolute top-3 left-12 z-[1000] bg-slate-900/90 text-white px-3 py-2 rounded-md shadow-md border border-slate-700 text-xs flex gap-3 backdrop-blur-sm">
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-emerald-500 rounded-sm inline-block"></span> Safe / Possession</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-amber-500 rounded-sm inline-block"></span> Notice / Under Review</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-red-500 rounded-sm inline-block"></span> Dispute / Legal Risk</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-emerald-500 rounded-sm inline-block"></span> Safe</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-amber-500 rounded-sm inline-block"></span> Under Review</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-red-500 rounded-sm inline-block"></span> Dispute / Risk</span>
           </div>
 
           {geoData && (
@@ -156,7 +248,7 @@ export default function App() {
                 url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
               />
               <GeoJSON
-                key={JSON.stringify(geoData)}
+                key={`${JSON.stringify(geoData?.features?.length)}-${activeFilter}-${searchQuery}-${selectedPlot}`}
                 data={geoData}
                 style={polygonStyle}
                 onEachFeature={(feature, layer) => {
@@ -237,23 +329,42 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Prescriptive Recommendation Card */}
-              <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg">
-                <div className="flex items-center gap-1.5 text-amber-800 font-bold text-xs uppercase mb-1">
-                  <CheckCircle2 size={16} className="text-amber-600" /> Prescriptive Administrative Action
+              {/* Prescriptive Recommendation Card + Dynamic GenAI Ground Plan */}
+              <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-amber-900 font-bold text-xs uppercase">
+                    <CheckCircle2 size={16} className="text-amber-600" /> Prescriptive Administrative Action
+                  </span>
+                  <span className="flex items-center gap-1 bg-amber-200/80 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300">
+                    <Sparkles size={11} className="text-amber-700" /> GenAI Ground Plan
+                  </span>
                 </div>
-                <p className="text-xs font-semibold text-slate-900">{plotDetails.prescriptive_recommendation.action_title}</p>
-                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                  {plotDetails.prescriptive_recommendation.description}
-                </p>
-                <div className="mt-2 text-[11px] text-amber-900 font-medium">
+
+                <p className="text-xs font-bold text-slate-900">{plotDetails.prescriptive_recommendation.action_title}</p>
+                
+                {/* 3 Action Steps */}
+                {plotDetails.ai_mitigation_steps && plotDetails.ai_mitigation_steps.length > 0 ? (
+                  <div className="space-y-1.5 pt-1">
+                    {plotDetails.ai_mitigation_steps.map((step, idx) => (
+                      <div key={idx} className="text-[11px] text-slate-700 flex items-start gap-1.5 bg-white/90 p-2 rounded border border-amber-200 shadow-xs">
+                        <span className="font-bold text-amber-700 min-w-[14px]">{idx + 1}.</span>
+                        <span className="leading-tight">{step}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                    {plotDetails.prescriptive_recommendation.description}
+                  </p>
+                )}
+
+                <div className="text-[11px] text-amber-900 font-medium pt-1">
                   Assigned To: <span className="font-bold">{plotDetails.prescriptive_recommendation.recommended_officer}</span>
                 </div>
 
-                {/* One-Click Notice Generation Trigger */}
                 <button
                   onClick={() => setShowNoticeModal(true)}
-                  className="mt-3 w-full flex items-center justify-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold py-2 px-3 rounded shadow-sm transition-colors"
+                  className="mt-2 w-full flex items-center justify-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold py-2 px-3 rounded shadow-sm transition-colors"
                 >
                   <FileText size={14} /> Generate Statutory Order / Notice Draft
                 </button>
@@ -369,9 +480,18 @@ export default function App() {
                 Whereas, land acquisition proceedings are actively underway for the National Corridor Project under the RFCTLARR Act, 2013. The statutory monitoring engine has flagged parcel <strong>{plotDetails.plot_info.khasra_no}</strong> as critical, having only <strong>{plotDetails.plot_info.statutory_days_left} days</strong> remaining prior to statutory lapsing.
               </p>
 
-              <div className="bg-amber-50/70 border-l-4 border-amber-500 p-3 font-sans text-xs">
-                <p className="font-bold text-amber-900 mb-0.5">Mandated Administrative Directive:</p>
-                <p className="text-slate-700">{plotDetails.prescriptive_recommendation.description}</p>
+              {/* Synchronized AI Action Mandate inside Formal Memo */}
+              <div className="bg-amber-50/70 border-l-4 border-amber-500 p-3 font-sans text-xs space-y-1.5">
+                <p className="font-bold text-amber-900 mb-0.5">Mandated Administrative Directives:</p>
+                {plotDetails.ai_mitigation_steps && plotDetails.ai_mitigation_steps.length > 0 ? (
+                  plotDetails.ai_mitigation_steps.map((step, idx) => (
+                    <p key={idx} className="text-slate-800 leading-snug">
+                      <strong>{idx + 1}.</strong> {step}
+                    </p>
+                  ))
+                ) : (
+                  <p className="text-slate-700">{plotDetails.prescriptive_recommendation.description}</p>
+                )}
               </div>
 
               <p>
