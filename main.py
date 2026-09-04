@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,6 +29,15 @@ expected_cols = artifacts["feature_names"]
 with open("mockData.json", "r") as f:
     mock_list = json.load(f)
     raw_plots = {item["khasra_no"]: item for item in mock_list}
+
+# Load Cadastral GeoJSON (Real Surveyed Polygon Boundaries)
+geojson_parcels = None
+if os.path.exists("parcels.geojson"):
+    try:
+        with open("parcels.geojson", "r", encoding="utf-8") as f:
+            geojson_parcels = json.load(f)
+    except Exception as e:
+        print(f"Warning: parcels.geojson load failed ({e}), fallback grid will be used.")
 
 
 # 2. Prescriptive Recommendation Engine (Administrative Rules)
@@ -79,9 +89,13 @@ def get_prescriptive_action(top_factor: str, plot: dict) -> dict:
 # ==========================================
 
 
-# Endpoint 1: GeoJSON Map Data (Real Farmland Coordinates)
+# Endpoint 1: GeoJSON Map Data (Real Farmland Coordinates with Safe Fallback)
 @app.get("/api/parcels")
 def get_parcels():
+    if geojson_parcels:
+        return geojson_parcels
+
+    # Fallback: Synthetic Cadastral Grid if file is unavailable
     plots_list = list(raw_plots.values())[:25]
     base_lat = 28.7510
     base_lng = 76.9150
@@ -92,7 +106,6 @@ def get_parcels():
         row = idx // grid_cols
         col = idx % grid_cols
 
-        # Khet rectangular strip dimensions
         w = 0.0016
         h = 0.0011
 
@@ -117,14 +130,14 @@ def get_parcels():
                 "id": plot["khasra_no"],
                 "properties": {
                     "khasra_no": plot["khasra_no"],
-                    "village": plot["village"],
-                    "project": plot["project"],
-                    "stage": plot["stage"],
-                    "risk_tier": plot["risk_tier"],
-                    "delay_days": plot["delay_days"],
-                    "status_color": plot["status_color"],
-                    "statutory_days_left": plot["statutory_days_left"],
-                    "disbursement_pct": plot["disbursement_pct"],
+                    "village": plot.get("village", ""),
+                    "project": plot.get("project", ""),
+                    "stage": plot.get("stage", ""),
+                    "risk_tier": plot.get("risk_tier", ""),
+                    "delay_days": plot.get("delay_days", 0),
+                    "status_color": plot.get("status_color", "green"),
+                    "statutory_days_left": plot.get("statutory_days_left", 365),
+                    "disbursement_pct": plot.get("disbursement_pct", 0.0),
                 },
                 "geometry": {
                     "type": "Polygon",

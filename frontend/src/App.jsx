@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import { 
   AlertTriangle, 
   CheckCircle2, 
@@ -14,10 +14,34 @@ import {
   X,
   Sparkles,
   Search,
-  Filter
+  RotateCcw
 } from "lucide-react";
 
 const BACKEND_URL = "http://127.0.0.1:8000";
+
+// Sub-component: Smooth Fly-To & Zoom Controller
+function MapController({ selectedPlot, geoData }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!selectedPlot || !geoData?.features) return;
+    const feature = geoData.features.find(
+      (f) => f.properties.khasra_no === selectedPlot
+    );
+    if (feature?.geometry?.coordinates) {
+      const coords = feature.geometry.coordinates[0];
+      const lats = coords.map((c) => c[1]);
+      const lngs = coords.map((c) => c[0]);
+      const bounds = [
+        [Math.min(...lats), Math.min(...lngs)],
+        [Math.max(...lats), Math.max(...lngs)],
+      ];
+      map.flyToBounds(bounds, { padding: [60, 60], maxZoom: 18, duration: 1.2 });
+    }
+  }, [selectedPlot, geoData, map]);
+
+  return null;
+}
 
 export default function App() {
   const [summary, setSummary] = useState(null);
@@ -86,6 +110,14 @@ export default function App() {
       .catch(err => console.error("Simulation error:", err));
   };
 
+  const resetSimulation = () => {
+    if (!plotDetails) return;
+    setSimResult(null);
+    setSimDisbursement(plotDetails.plot_info.disbursement_pct);
+    setResolveKhata(plotDetails.plot_info.unpartitioned_khata === 1);
+    setResolveForest(false);
+  };
+
   const polygonStyle = (feature) => {
     const props = feature.properties;
     const isSelected = selectedPlot === props.khasra_no;
@@ -107,16 +139,26 @@ export default function App() {
       );
     }
 
-    const color = props.status_color;
-    const baseFill = color === "red" ? "#ef4444" : color === "yellow" ? "#eab308" : "#22c55e";
+    // Dynamic Simulation Recolor
+    let effectiveColor = props.status_color;
+    const isSimulatedPlot = simResult && simResult.khasra_no === props.khasra_no;
+    if (isSimulatedPlot) {
+      if (simResult.new_predicted_delay_days < 45) {
+        effectiveColor = "green";
+      } else if (simResult.new_predicted_delay_days < 90) {
+        effectiveColor = "yellow";
+      }
+    }
+
+    const baseFill = effectiveColor === "red" ? "#ef4444" : effectiveColor === "yellow" ? "#eab308" : "#22c55e";
 
     return {
       fillColor: baseFill,
       weight: isSelected ? 3.5 : 1.5,
       opacity: matchesFilter ? 0.95 : 0.2,
-      color: isSelected ? "#38bdf8" : "#ffffff",
+      color: isSelected ? "#38bdf8" : isSimulatedPlot ? "#22c55e" : "#ffffff",
       dashArray: isSelected ? "" : "3",
-      fillOpacity: matchesFilter ? (isSelected ? 0.75 : 0.45) : 0.08
+      fillOpacity: matchesFilter ? (isSelected ? 0.8 : 0.45) : 0.08
     };
   };
 
@@ -248,12 +290,13 @@ export default function App() {
                 url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
               />
               <GeoJSON
-                key={`${JSON.stringify(geoData?.features?.length)}-${activeFilter}-${searchQuery}-${selectedPlot}`}
+                key={`${JSON.stringify(geoData?.features?.length)}-${activeFilter}-${searchQuery}-${selectedPlot}-${simResult?.new_predicted_delay_days}`}
                 data={geoData}
                 style={polygonStyle}
                 onEachFeature={(feature, layer) => {
+                  const isSim = simResult && simResult.khasra_no === feature.properties.khasra_no;
                   layer.bindTooltip(
-                    `<strong>${feature.properties.khasra_no}</strong><br/>${feature.properties.village}`,
+                    `<strong>${feature.properties.khasra_no}</strong><br/>${feature.properties.village}${isSim ? '<br/><span style="color:#22c55e;font-weight:bold">⚡ Simulation Active</span>' : ''}`,
                     { direction: "top", opacity: 0.9 }
                   );
                   layer.on({
@@ -261,6 +304,7 @@ export default function App() {
                   });
                 }}
               />
+              <MapController selectedPlot={selectedPlot} geoData={geoData} />
             </MapContainer>
           )}
         </div>
@@ -271,7 +315,7 @@ export default function App() {
             <div className="h-full flex flex-col items-center justify-center text-center text-slate-400">
               <Layers size={48} className="mb-2 text-slate-300" />
               <p className="font-medium">Select any Land Parcel (Khasra) on the map</p>
-              <p className="text-xs">Click a polygon to inspect AI predictions & recommendations</p>
+              <p className="text-xs">Click a polygon or search above to inspect AI predictions</p>
             </div>
           ) : loadingDetails ? (
             <p className="text-sm text-slate-500">Evaluating bottlenecks & running SHAP models...</p>
@@ -285,10 +329,11 @@ export default function App() {
                     <p className="text-xs text-slate-500">Village: {plotDetails.plot_info.village} | {plotDetails.plot_info.project}</p>
                   </div>
                   <span className={`text-xs px-2.5 py-1 rounded font-semibold ${
+                    simResult ? "bg-emerald-100 text-emerald-800 border border-emerald-300" :
                     plotDetails.plot_info.risk_tier === "Critical" ? "bg-red-100 text-red-700 border border-red-300" :
                     plotDetails.plot_info.risk_tier === "High" ? "bg-amber-100 text-amber-700 border border-amber-300" : "bg-emerald-100 text-emerald-700"
                   }`}>
-                    {plotDetails.plot_info.risk_tier} Risk
+                    {simResult ? "Simulated Tier" : `${plotDetails.plot_info.risk_tier} Risk`}
                   </span>
                 </div>
 
@@ -303,8 +348,12 @@ export default function App() {
               {/* Predicted Delay */}
               <div className="bg-slate-900 text-white p-3 rounded-lg flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-slate-400">Predicted Lifecycle Delay</p>
-                  <p className="text-2xl font-bold text-amber-400">{plotDetails.predicted_delay_days} Days</p>
+                  <p className="text-xs text-slate-400">
+                    {simResult ? "Simulated Delay Projection" : "Predicted Lifecycle Delay"}
+                  </p>
+                  <p className={`text-2xl font-bold ${simResult ? "text-emerald-400" : "text-amber-400"}`}>
+                    {simResult ? simResult.new_predicted_delay_days : plotDetails.predicted_delay_days} Days
+                  </p>
                 </div>
                 <Clock className="text-slate-500" size={32} />
               </div>
@@ -372,8 +421,18 @@ export default function App() {
 
               {/* What-If Counterfactual Simulator */}
               <div className="p-3 bg-slate-50 border border-slate-300 rounded-lg space-y-3">
-                <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs">
-                  <Sliders size={16} className="text-slate-600" /> "What-If" Mitigation Simulator
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs">
+                    <Sliders size={16} className="text-slate-600" /> "What-If" Mitigation Simulator
+                  </div>
+                  {simResult && (
+                    <button
+                      onClick={resetSimulation}
+                      className="text-[10px] text-slate-500 hover:text-slate-800 flex items-center gap-1 underline"
+                    >
+                      <RotateCcw size={11} /> Reset
+                    </button>
+                  )}
                 </div>
 
                 <div>
@@ -418,13 +477,16 @@ export default function App() {
                 </button>
 
                 {simResult && (
-                  <div className="mt-2 p-2 bg-emerald-50 border border-emerald-300 rounded text-xs">
+                  <div className="mt-2 p-2.5 bg-emerald-50 border border-emerald-300 rounded text-xs space-y-1">
                     <div className="flex items-center justify-between font-bold text-emerald-800">
                       <span>New Delay: {simResult.new_predicted_delay_days} Days</span>
                       <span className="text-emerald-700 flex items-center">
                         <TrendingDown size={14} className="mr-0.5" /> Saved: {simResult.days_saved} Days
                       </span>
                     </div>
+                    <p className="text-[11px] text-emerald-700 font-medium">
+                      ✓ Map parcel recolored to indicate reduced risk status.
+                    </p>
                   </div>
                 )}
               </div>
@@ -437,7 +499,6 @@ export default function App() {
       {showNoticeModal && plotDetails && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full border border-slate-300 overflow-hidden flex flex-col max-h-[90vh]">
-            {/* Modal Actions Header */}
             <div className="bg-slate-900 text-white px-6 py-3 flex justify-between items-center">
               <span className="text-xs uppercase tracking-wider font-semibold text-amber-400 flex items-center gap-1.5">
                 <FileText size={16} /> Automated Administrative Order Draft
@@ -458,7 +519,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Official Letterhead & Body */}
             <div className="p-8 overflow-y-auto space-y-4 text-slate-800 font-serif text-sm leading-relaxed">
               <div className="text-center border-b border-slate-300 pb-3">
                 <h3 className="font-bold text-base tracking-wide uppercase">Office of the Competent Authority for Land Acquisition (CALA)</h3>
@@ -480,7 +540,6 @@ export default function App() {
                 Whereas, land acquisition proceedings are actively underway for the National Corridor Project under the RFCTLARR Act, 2013. The statutory monitoring engine has flagged parcel <strong>{plotDetails.plot_info.khasra_no}</strong> as critical, having only <strong>{plotDetails.plot_info.statutory_days_left} days</strong> remaining prior to statutory lapsing.
               </p>
 
-              {/* Synchronized AI Action Mandate inside Formal Memo */}
               <div className="bg-amber-50/70 border-l-4 border-amber-500 p-3 font-sans text-xs space-y-1.5">
                 <p className="font-bold text-amber-900 mb-0.5">Mandated Administrative Directives:</p>
                 {plotDetails.ai_mitigation_steps && plotDetails.ai_mitigation_steps.length > 0 ? (
