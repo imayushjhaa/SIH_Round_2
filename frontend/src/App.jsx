@@ -14,10 +14,38 @@ import {
   X,
   Sparkles,
   Search,
-  RotateCcw
+  RotateCcw,
+  Check,
+  Calendar,
+  ShieldAlert,
+  AlertOctagon
 } from "lucide-react";
 
 const BACKEND_URL = "http://127.0.0.1:8000";
+
+// RFCTLARR 2013 5-Stage Statutory Pipeline Definition
+const STATUTORY_STAGES = [
+  { id: "sec11", label: "Sec 11", full: "Section 11 (Notice)", window: "Day 0" },
+  { id: "sec15", label: "Sec 15", full: "Section 15 (Hearing)", window: "60 Days" },
+  { id: "sec19", label: "Sec 19", full: "Section 19 (Declaration)", window: "Max 365 Days" },
+  { id: "award", label: "Sec 23", full: "Award Enquiry / Sec 23", window: "+12 Months" },
+  { id: "possession", label: "Possession", full: "Physical Possession", window: "Post-Award" },
+];
+
+// Helper: Format ISO Date into Clean Reading Format
+const formatLegalDate = (dateStr) => {
+  if (!dateStr) return "N/A";
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+};
+
+// Helper: Calculate Statutory Expiration (Sec 11 Date + 365 Days)
+const calculateSec19Deadline = (sec11DateStr) => {
+  if (!sec11DateStr) return "N/A";
+  const d = new Date(sec11DateStr);
+  d.setDate(d.getDate() + 365);
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+};
 
 // Sub-component: Smooth Fly-To & Zoom Controller
 function MapController({ selectedPlot, geoData }) {
@@ -43,6 +71,122 @@ function MapController({ selectedPlot, geoData }) {
   return null;
 }
 
+// Sub-component: RFCTLARR Statutory Pipeline & Timeline Monitor
+function StatutoryTimelineModule({ plotInfo }) {
+  const getStageIndex = (stageName) => {
+    if (!stageName) return 0;
+    const s = stageName.toLowerCase();
+    if (s.includes("11") || s.includes("notice")) return 0;
+    if (s.includes("15") || s.includes("hearing")) return 1;
+    if (s.includes("19") || s.includes("declaration")) return 2;
+    if (s.includes("award") || s.includes("23") || s.includes("enquiry")) return 3;
+    if (s.includes("possession")) return 4;
+    return 1;
+  };
+
+  const activeIndex = getStageIndex(plotInfo.stage);
+  const isLapsed = plotInfo.statutory_days_left < 0 && activeIndex < 2;
+  const isCritical = plotInfo.statutory_days_left >= 0 && plotInfo.statutory_days_left < 45 && activeIndex < 2;
+  const deadline = calculateSec19Deadline(plotInfo.sec_11_date);
+
+  return (
+    <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-3">
+      <div className="flex justify-between items-center">
+        <span className="text-[11px] font-bold tracking-wide uppercase text-slate-700 flex items-center gap-1.5">
+          <Scale size={13} className="text-amber-600" /> RFCTLARR Statutory Pipeline
+        </span>
+        <span className="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-semibold">
+          Stage {activeIndex + 1} of 5
+        </span>
+      </div>
+
+      {/* 5-Stage Stepper Track */}
+      <div className="relative flex items-center justify-between pt-1 pb-1">
+        <div className="absolute top-[13px] left-3 right-3 h-0.5 bg-slate-200 z-0"></div>
+        <div 
+          className="absolute top-[13px] left-3 h-0.5 bg-emerald-500 z-0 transition-all duration-500"
+          style={{ width: `${(activeIndex / (STATUTORY_STAGES.length - 1)) * 90}%` }}
+        ></div>
+
+        {STATUTORY_STAGES.map((stg, idx) => {
+          const isDone = idx < activeIndex;
+          const isCurrent = idx === activeIndex;
+
+          return (
+            <div key={stg.id} className="relative z-10 flex flex-col items-center">
+              <div 
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+                  isDone 
+                    ? "bg-emerald-500 text-white shadow-xs" 
+                    : isCurrent 
+                    ? isLapsed
+                      ? "bg-red-600 text-white ring-4 ring-red-100 animate-pulse"
+                      : "bg-blue-600 text-white ring-4 ring-blue-100 shadow-sm" 
+                    : "bg-white text-slate-400 border-2 border-slate-300"
+                }`}
+              >
+                {isDone ? <Check size={12} strokeWidth={3} /> : idx + 1}
+              </div>
+              <span 
+                className={`text-[9px] mt-1.5 font-semibold whitespace-nowrap ${
+                  isCurrent 
+                    ? isLapsed ? "text-red-700 font-bold" : "text-blue-700 font-bold" 
+                    : isDone 
+                    ? "text-emerald-700" 
+                    : "text-slate-400"
+                }`}
+              >
+                {stg.label}
+              </span>
+              <span className="text-[8px] text-slate-400 scale-90 -mt-0.5">{stg.window}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Statutory Timeline Details & Expiry Card */}
+      <div className={`p-2.5 rounded border text-xs space-y-1.5 ${
+        isLapsed 
+          ? "bg-red-50/80 border-red-300 text-red-900" 
+          : isCritical 
+          ? "bg-amber-50/80 border-amber-300 text-amber-900" 
+          : "bg-white border-slate-200 text-slate-700"
+      }`}>
+        <div className="flex items-center justify-between font-medium">
+          <span className="flex items-center gap-1">
+            <Calendar size={12} className="text-slate-500" /> Sec 11 Notification:
+          </span>
+          <span className="font-semibold text-slate-900">{formatLegalDate(plotInfo.sec_11_date)}</span>
+        </div>
+
+        <div className="flex items-center justify-between font-medium">
+          <span className="flex items-center gap-1">
+            <Clock size={12} className="text-slate-500" /> Sec 19 Lapsing Deadline:
+          </span>
+          <span className="font-semibold text-slate-900">{deadline}</span>
+        </div>
+
+        <div className="pt-1 border-t border-slate-200/60 flex items-center justify-between font-bold">
+          <span>Statutory Status:</span>
+          {isLapsed ? (
+            <span className="text-red-600 flex items-center gap-1 text-[11px]">
+              <ShieldAlert size={12} /> LAPSED under Sec 19(7) ({Math.abs(plotInfo.statutory_days_left)}d Overdue)
+            </span>
+          ) : isCritical ? (
+            <span className="text-amber-700 flex items-center gap-1 text-[11px]">
+              <AlertTriangle size={12} /> Expiration Imminent ({plotInfo.statutory_days_left} Days Left)
+            </span>
+          ) : (
+            <span className="text-emerald-700 text-[11px]">
+              Active ({plotInfo.statutory_days_left} Days Remaining)
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [summary, setSummary] = useState(null);
   const [geoData, setGeoData] = useState(null);
@@ -53,7 +197,7 @@ export default function App() {
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState("ALL"); // "ALL" | "LAPSE" | "HIGH_RISK"
+  const [activeFilter, setActiveFilter] = useState("ALL");
 
   // What-If Simulation State
   const [simDisbursement, setSimDisbursement] = useState(50);
@@ -122,15 +266,19 @@ export default function App() {
     const props = feature.properties;
     const isSelected = selectedPlot === props.khasra_no;
     
+    // Statutory Reality Check:
+    // Lapsed (< 0) or nearing statutory lapse (< 45 days) MUST render RED under RFCTLARR Sec 19(7)
+    const isStatutoryCritical = props.statutory_days_left < 45 && props.stage !== "Possession Taken";
+    let effectiveColor = isStatutoryCritical ? "red" : props.status_color;
+
     // Check Filter Criteria
     let matchesFilter = true;
     if (activeFilter === "LAPSE") {
-      matchesFilter = props.statutory_days_left < 45 && props.stage !== "Possession Taken";
+      matchesFilter = isStatutoryCritical;
     } else if (activeFilter === "HIGH_RISK") {
-      matchesFilter = props.risk_tier === "Critical" || props.risk_tier === "High" || props.status_color === "red";
+      matchesFilter = props.risk_tier === "Critical" || props.risk_tier === "High" || effectiveColor === "red";
     }
 
-    // Check Search Query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       matchesFilter = matchesFilter && (
@@ -140,7 +288,6 @@ export default function App() {
     }
 
     // Dynamic Simulation Recolor
-    let effectiveColor = props.status_color;
     const isSimulatedPlot = simResult && simResult.khasra_no === props.khasra_no;
     if (isSimulatedPlot) {
       if (simResult.new_predicted_delay_days < 45) {
@@ -161,6 +308,8 @@ export default function App() {
       fillOpacity: matchesFilter ? (isSelected ? 0.8 : 0.45) : 0.08
     };
   };
+
+  const isPlotLapsed = plotDetails && plotDetails.plot_info.statutory_days_left < 0;
 
   return (
     <div className="flex flex-col h-screen bg-slate-100 font-sans text-slate-800">
@@ -219,7 +368,7 @@ export default function App() {
         {/* Left Side: Cadastral Satellite Map */}
         <div className="w-2/3 h-full relative rounded-xl overflow-hidden shadow-md border border-slate-300">
           
-          {/* Map Controls: Search & Filter Toolbar */}
+          {/* Map Controls */}
           <div className="absolute top-3 right-3 z-[1000] flex items-center gap-2">
             <form onSubmit={handleSearchSubmit} className="relative">
               <input
@@ -315,10 +464,10 @@ export default function App() {
             <div className="h-full flex flex-col items-center justify-center text-center text-slate-400">
               <Layers size={48} className="mb-2 text-slate-300" />
               <p className="font-medium">Select any Land Parcel (Khasra) on the map</p>
-              <p className="text-xs">Click a polygon or search above to inspect AI predictions</p>
+              <p className="text-xs">Click a polygon or search above to inspect statutory timelines</p>
             </div>
           ) : loadingDetails ? (
-            <p className="text-sm text-slate-500">Evaluating bottlenecks & running SHAP models...</p>
+            <p className="text-sm text-slate-500">Evaluating statutory compliance & running SHAP models...</p>
           ) : plotDetails && (
             <>
               {/* Parcel Header */}
@@ -330,39 +479,62 @@ export default function App() {
                   </div>
                   <span className={`text-xs px-2.5 py-1 rounded font-semibold ${
                     simResult ? "bg-emerald-100 text-emerald-800 border border-emerald-300" :
+                    isPlotLapsed ? "bg-red-100 text-red-700 border border-red-300 animate-pulse font-bold" :
                     plotDetails.plot_info.risk_tier === "Critical" ? "bg-red-100 text-red-700 border border-red-300" :
                     plotDetails.plot_info.risk_tier === "High" ? "bg-amber-100 text-amber-700 border border-amber-300" : "bg-emerald-100 text-emerald-700"
                   }`}>
-                    {simResult ? "Simulated Tier" : `${plotDetails.plot_info.risk_tier} Risk`}
-                  </span>
-                </div>
-
-                <div className="mt-2 flex items-center justify-between text-xs bg-slate-50 p-2 rounded border border-slate-200">
-                  <span className="text-slate-600">Statutory Limit Countdown:</span>
-                  <span className={`font-bold ${plotDetails.plot_info.statutory_days_left < 45 ? "text-red-600" : "text-slate-800"}`}>
-                    {plotDetails.plot_info.statutory_days_left} Days Left
+                    {simResult ? "Simulated Tier" : isPlotLapsed ? "Statutorily Lapsed" : `${plotDetails.plot_info.risk_tier} Risk`}
                   </span>
                 </div>
               </div>
 
-              {/* Predicted Delay */}
-              <div className="bg-slate-900 text-white p-3 rounded-lg flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-slate-400">
-                    {simResult ? "Simulated Delay Projection" : "Predicted Lifecycle Delay"}
+              {/* Dynamic RFCTLARR Statutory Timeline & Pipeline Monitor */}
+              <StatutoryTimelineModule plotInfo={plotDetails.plot_info} />
+
+              {/* Predicted Delay Card with Legal Guardrail Override */}
+              {isPlotLapsed ? (
+                <div className="bg-red-950 text-white p-3.5 rounded-lg border border-red-700 space-y-1 shadow-inner">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-red-400 text-xs font-bold uppercase tracking-wider">
+                      <AlertOctagon size={15} /> Statutory Proceeding Abated
+                    </span>
+                    <span className="text-[10px] bg-red-900/80 text-red-200 px-2 py-0.5 rounded font-mono font-bold">
+                      Sec 19(7) VOID
+                    </span>
+                  </div>
+                  <p className="text-lg font-bold text-red-100 tracking-wide">
+                    ACQUISITION LEGALLY VOID
                   </p>
-                  <p className={`text-2xl font-bold ${simResult ? "text-emerald-400" : "text-amber-400"}`}>
-                    {simResult ? simResult.new_predicted_delay_days : plotDetails.predicted_delay_days} Days
+                  <p className="text-[11px] text-red-300 leading-tight">
+                    Statutory 365-day threshold lapsed. Cannot calculate operational delay. Mandates fresh Section 11 Preliminary Notification.
                   </p>
                 </div>
-                <Clock className="text-slate-500" size={32} />
-              </div>
+              ) : (
+                <div className="bg-slate-900 text-white p-3 rounded-lg flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-slate-400">
+                      {simResult ? "Simulated Delay Projection" : "Predicted Lifecycle Delay"}
+                    </p>
+                    <p className={`text-2xl font-bold ${simResult ? "text-emerald-400" : "text-amber-400"}`}>
+                      {simResult ? simResult.new_predicted_delay_days : plotDetails.predicted_delay_days} Days
+                    </p>
+                  </div>
+                  <Clock className="text-slate-500" size={32} />
+                </div>
+              )}
 
               {/* Explainable AI (SHAP Breakdown) */}
               <div>
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Key Delay Drivers (Explainable AI - TreeSHAP)
-                </h3>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Key Delay Drivers (TreeSHAP)
+                  </h3>
+                  {isPlotLapsed && (
+                    <span className="text-[10px] text-red-600 font-semibold bg-red-50 px-1.5 py-0.5 rounded border border-red-200">
+                      Pre-Lapse Root Cause
+                    </span>
+                  )}
+                </div>
                 <div className="space-y-2">
                   {plotDetails.shap_breakdown.map((item, idx) => (
                     <div key={idx} className="text-xs bg-slate-50 p-2 rounded border border-slate-200">
@@ -389,9 +561,10 @@ export default function App() {
                   </span>
                 </div>
 
-                <p className="text-xs font-bold text-slate-900">{plotDetails.prescriptive_recommendation.action_title}</p>
+                <p className="text-xs font-bold text-slate-900">
+                  {isPlotLapsed ? "Initiate Emergency Re-Notification under Section 11(1)" : plotDetails.prescriptive_recommendation.action_title}
+                </p>
                 
-                {/* 3 Action Steps */}
                 {plotDetails.ai_mitigation_steps && plotDetails.ai_mitigation_steps.length > 0 ? (
                   <div className="space-y-1.5 pt-1">
                     {plotDetails.ai_mitigation_steps.map((step, idx) => (
@@ -435,59 +608,67 @@ export default function App() {
                   )}
                 </div>
 
-                <div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span>Disbursement Target:</span>
-                    <span className="font-bold">{simDisbursement}%</span>
+                {isPlotLapsed ? (
+                  <div className="p-2.5 bg-red-100/70 border border-red-200 rounded text-[11px] text-red-800">
+                    <strong>Simulation Disabled:</strong> This parcel has exceeded Section 19 statutory timeframes. Standard administrative interventions cannot reverse legal lapsing without re-notification.
                   </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={simDisbursement}
-                    onChange={(e) => setSimDisbursement(e.target.value)}
-                    className="w-full cursor-pointer"
-                  />
-                </div>
-
-                <div className="space-y-1 text-xs">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={!resolveKhata}
-                      onChange={(e) => setResolveKhata(!e.target.checked)}
-                    />
-                    Resolve Succession / Title Dispute
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={resolveForest}
-                      onChange={(e) => setResolveForest(e.target.checked)}
-                    />
-                    Expedite Stage-II Forest Clearance
-                  </label>
-                </div>
-
-                <button
-                  onClick={runSimulation}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 rounded transition-colors"
-                >
-                  Simulate Intervention
-                </button>
-
-                {simResult && (
-                  <div className="mt-2 p-2.5 bg-emerald-50 border border-emerald-300 rounded text-xs space-y-1">
-                    <div className="flex items-center justify-between font-bold text-emerald-800">
-                      <span>New Delay: {simResult.new_predicted_delay_days} Days</span>
-                      <span className="text-emerald-700 flex items-center">
-                        <TrendingDown size={14} className="mr-0.5" /> Saved: {simResult.days_saved} Days
-                      </span>
+                ) : (
+                  <>
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span>Disbursement Target:</span>
+                        <span className="font-bold">{simDisbursement}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={simDisbursement}
+                        onChange={(e) => setSimDisbursement(e.target.value)}
+                        className="w-full cursor-pointer"
+                      />
                     </div>
-                    <p className="text-[11px] text-emerald-700 font-medium">
-                      ✓ Map parcel recolored to indicate reduced risk status.
-                    </p>
-                  </div>
+
+                    <div className="space-y-1 text-xs">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={!resolveKhata}
+                          onChange={(e) => setResolveKhata(!e.target.checked)}
+                        />
+                        Resolve Succession / Title Dispute
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={resolveForest}
+                          onChange={(e) => setResolveForest(e.target.checked)}
+                        />
+                        Expedite Stage-II Forest Clearance
+                      </label>
+                    </div>
+
+                    <button
+                      onClick={runSimulation}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 rounded transition-colors"
+                    >
+                      Simulate Intervention
+                    </button>
+
+                    {simResult && (
+                      <div className="mt-2 p-2.5 bg-emerald-50 border border-emerald-300 rounded text-xs space-y-1">
+                        <div className="flex items-center justify-between font-bold text-emerald-800">
+                          <span>New Delay: {simResult.new_predicted_delay_days} Days</span>
+                          <span className="text-emerald-700 flex items-center">
+                            <TrendingDown size={14} className="mr-0.5" /> Saved: {simResult.days_saved} Days
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-emerald-700 font-medium">
+                          ✓ Map parcel recolored to indicate reduced risk status.
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </>
