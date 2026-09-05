@@ -22,18 +22,20 @@ app.add_middleware(
 # Base directory setup for robust file loading
 BASE_DIR = Path(__file__).resolve().parent
 
-# 1. Load ML Artifacts & Data Safely (Looking inside backend folder)
-artifacts = joblib.load(BASE_DIR / "backend" / "land_model.joblib") if (BASE_DIR / "backend" / "land_model.joblib").exists() else joblib.load(BASE_DIR / "land_model.joblib")
+# 1. Load ML Artifacts & Data Safely (Checking both root and backend folders dynamically)
+model_path = BASE_DIR / "backend" / "land_model.joblib" if (BASE_DIR / "backend" / "land_model.joblib").exists() else BASE_DIR / "land_model.joblib"
+artifacts = joblib.load(model_path)
 model = artifacts["model"]
 explainer = artifacts["explainer"]
 expected_cols = artifacts["feature_names"]
 
-with open(BASE_DIR / "backend" / "mockData.json", "r", encoding="utf-8") as f:
+mock_path = BASE_DIR / "backend" / "mockData.json" if (BASE_DIR / "backend" / "mockData.json").exists() else BASE_DIR / "mockData.json"
+with open(mock_path, "r", encoding="utf-8") as f:
     mock_list = json.load(f)
     raw_plots = {item["khasra_no"]: item for item in mock_list}
 
-# Load real GeoJSON cadastral polygons from backend folder
-with open(BASE_DIR / "backend" / "parcels.geojson", "r", encoding="utf-8") as f:
+geojson_path = BASE_DIR / "backend" / "parcels.geojson" if (BASE_DIR / "backend" / "parcels.geojson").exists() else BASE_DIR / "parcels.geojson"
+with open(geojson_path, "r", encoding="utf-8") as f:
     raw_geojson = json.load(f)
 
 

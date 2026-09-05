@@ -1,150 +1,40 @@
 {
   "type": "FeatureCollection",
-  "name": "Cadastral_Parcels_KMP_Asaudha_Corridor",
+  "name": "Cadastral_Parcels_5x6_Shifted_North",
   "features": [
-    {
-      "type": "Feature",
-      "id": "KH-84//1",
-      "properties": { "khasra_no": "KH-84//1" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8412, 28.7482], [76.8431, 28.7490], [76.8423, 28.7508], [76.8404, 28.7500], [76.8412, 28.7482]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "KH-84//2",
-      "properties": { "khasra_no": "KH-84//2" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8431, 28.7490], [76.8452, 28.7498], [76.8443, 28.7516], [76.8423, 28.7508], [76.8431, 28.7490]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "KH-88//10",
-      "properties": { "khasra_no": "KH-88//10" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8420, 28.7465], [76.8439, 28.7473], [76.8431, 28.7490], [76.8412, 28.7482], [76.8420, 28.7465]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "KH-88//11",
-      "properties": { "khasra_no": "KH-88//11" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8439, 28.7473], [76.8460, 28.7481], [76.8452, 28.7498], [76.8431, 28.7490], [76.8439, 28.7473]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "KH-92//4",
-      "properties": { "khasra_no": "KH-92//4" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8428, 28.7448], [76.8447, 28.7456], [76.8439, 28.7473], [76.8420, 28.7465], [76.8428, 28.7448]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "KH-92//5",
-      "properties": { "khasra_no": "KH-92//5" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8447, 28.7456], [76.8468, 28.7464], [76.8460, 28.7481], [76.8439, 28.7473], [76.8447, 28.7456]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "KH-95//18",
-      "properties": { "khasra_no": "KH-95//18" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8436, 28.7431], [76.8455, 28.7439], [76.8447, 28.7456], [76.8428, 28.7448], [76.8436, 28.7431]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "KH-95//19",
-      "properties": { "khasra_no": "KH-95//19" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8455, 28.7439], [76.8476, 28.7447], [76.8468, 28.7464], [76.8447, 28.7456], [76.8455, 28.7439]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "KH-104//2",
-      "properties": { "khasra_no": "KH-104//2" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8444, 28.7414], [76.8463, 28.7422], [76.8455, 28.7439], [76.8436, 28.7431], [76.8444, 28.7414]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "KH-104//3",
-      "properties": { "khasra_no": "KH-104//3" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8463, 28.7422], [76.8484, 28.7430], [76.8476, 28.7447], [76.8455, 28.7439], [76.8463, 28.7422]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "KH-108//14",
-      "properties": { "khasra_no": "KH-108//14" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8452, 28.7397], [76.8471, 28.7405], [76.8463, 28.7422], [76.8444, 28.7414], [76.8452, 28.7397]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "KH-108//15",
-      "properties": { "khasra_no": "KH-108//15" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8471, 28.7405], [76.8492, 28.7413], [76.8484, 28.7430], [76.8463, 28.7422], [76.8471, 28.7405]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "KH-112//7",
-      "properties": { "khasra_no": "KH-112//7" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8460, 28.7380], [76.8479, 28.7388], [76.8471, 28.7405], [76.8452, 28.7397], [76.8460, 28.7380]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "KH-112//8",
-      "properties": { "khasra_no": "KH-112//8" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8479, 28.7388], [76.8500, 28.7396], [76.8492, 28.7413], [76.8471, 28.7405], [76.8479, 28.7388]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "KH-116//21",
-      "properties": { "khasra_no": "KH-116//21" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8468, 28.7363], [76.8487, 28.7371], [76.8479, 28.7388], [76.8460, 28.7380], [76.8468, 28.7363]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "KH-116//22",
-      "properties": { "khasra_no": "KH-116//22" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[76.8487, 28.7371], [76.8508, 28.7379], [76.8500, 28.7396], [76.8479, 28.7388], [76.8487, 28.7371]]]
-      }
-    }
+    {"type": "Feature", "id": "KH-80//1", "properties": {"khasra_no": "KH-80//1"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8400, 28.7620], [76.8430, 28.7620], [76.8430, 28.7635], [76.8400, 28.7635], [76.8400, 28.7620]]]}},
+    {"type": "Feature", "id": "KH-80//2", "properties": {"khasra_no": "KH-80//2"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8430, 28.7620], [76.8460, 28.7620], [76.8460, 28.7635], [76.8430, 28.7635], [76.8430, 28.7620]]]}},
+    {"type": "Feature", "id": "KH-81//5", "properties": {"khasra_no": "KH-81//5"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8460, 28.7620], [76.8490, 28.7620], [76.8490, 28.7635], [76.8460, 28.7635], [76.8460, 28.7620]]]}},
+    {"type": "Feature", "id": "KH-81//6", "properties": {"khasra_no": "KH-81//6"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8490, 28.7620], [76.8520, 28.7620], [76.8520, 28.7635], [76.8490, 28.7635], [76.8490, 28.7620]]]}},
+    {"type": "Feature", "id": "KH-82//3", "properties": {"khasra_no": "KH-82//3"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8520, 28.7620], [76.8550, 28.7620], [76.8550, 28.7635], [76.8520, 28.7635], [76.8520, 28.7620]]]}},
+    {"type": "Feature", "id": "KH-82//4", "properties": {"khasra_no": "KH-82//4"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8550, 28.7620], [76.8580, 28.7620], [76.8580, 28.7635], [76.8550, 28.7635], [76.8550, 28.7620]]]}},
+
+    {"type": "Feature", "id": "KH-84//1", "properties": {"khasra_no": "KH-84//1"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8400, 28.7600], [76.8430, 28.7600], [76.8430, 28.7615], [76.8400, 28.7615], [76.8400, 28.7600]]]}},
+    {"type": "Feature", "id": "KH-84//2", "properties": {"khasra_no": "KH-84//2"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8430, 28.7600], [76.8460, 28.7600], [76.8460, 28.7615], [76.8430, 28.7615], [76.8430, 28.7600]]]}},
+    {"type": "Feature", "id": "KH-88//10", "properties": {"khasra_no": "KH-88//10"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8460, 28.7600], [76.8490, 28.7600], [76.8490, 28.7615], [76.8460, 28.7615], [76.8460, 28.7600]]]}},
+    {"type": "Feature", "id": "KH-88//11", "properties": {"khasra_no": "KH-88//11"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8490, 28.7600], [76.8520, 28.7600], [76.8520, 28.7615], [76.8490, 28.7615], [76.8490, 28.7600]]]}},
+    {"type": "Feature", "id": "KH-90//12", "properties": {"khasra_no": "KH-90//12"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8520, 28.7600], [76.8550, 28.7600], [76.8550, 28.7615], [76.8520, 28.7615], [76.8520, 28.7600]]]}},
+    {"type": "Feature", "id": "KH-90//13", "properties": {"khasra_no": "KH-90//13"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8550, 28.7600], [76.8580, 28.7600], [76.8580, 28.7615], [76.8550, 28.7615], [76.8550, 28.7600]]]}},
+
+    {"type": "Feature", "id": "KH-92//4", "properties": {"khasra_no": "KH-92//4"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8400, 28.7580], [76.8430, 28.7580], [76.8430, 28.7595], [76.8400, 28.7595], [76.8400, 28.7580]]]}},
+    {"type": "Feature", "id": "KH-92//5", "properties": {"khasra_no": "KH-92//5"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8430, 28.7580], [76.8460, 28.7580], [76.8460, 28.7595], [76.8430, 28.7595], [76.8430, 28.7580]]]}},
+    {"type": "Feature", "id": "KH-95//18", "properties": {"khasra_no": "KH-95//18"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8460, 28.7580], [76.8490, 28.7580], [76.8490, 28.7595], [76.8460, 28.7595], [76.8460, 28.7580]]]}},
+    {"type": "Feature", "id": "KH-95//19", "properties": {"khasra_no": "KH-95//19"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8490, 28.7580], [76.8520, 28.7580], [76.8520, 28.7595], [76.8490, 28.7595], [76.8490, 28.7580]]]}},
+    {"type": "Feature", "id": "KH-98//7", "properties": {"khasra_no": "KH-98//7"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8520, 28.7580], [76.8550, 28.7580], [76.8550, 28.7595], [76.8520, 28.7595], [76.8520, 28.7580]]]}},
+    {"type": "Feature", "id": "KH-98//8", "properties": {"khasra_no": "KH-98//8"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8550, 28.7580], [76.8580, 28.7580], [76.8580, 28.7595], [76.8550, 28.7595], [76.8550, 28.7580]]]}},
+
+    {"type": "Feature", "id": "KH-101//1", "properties": {"khasra_no": "KH-101//1"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8400, 28.7560], [76.8430, 28.7560], [76.8430, 28.7575], [76.8400, 28.7575], [76.8400, 28.7560]]]}},
+    {"type": "Feature", "id": "KH-101//2", "properties": {"khasra_no": "KH-101//2"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8430, 28.7560], [76.8460, 28.7560], [76.8460, 28.7575], [76.8430, 28.7575], [76.8430, 28.7560]]]}},
+    {"type": "Feature", "id": "KH-104//2", "properties": {"khasra_no": "KH-104//2"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8460, 28.7560], [76.8490, 28.7560], [76.8490, 28.7575], [76.8460, 28.7575], [76.8460, 28.7560]]]}},
+    {"type": "Feature", "id": "KH-104//3", "properties": {"khasra_no": "KH-104//3"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8490, 28.7560], [76.8520, 28.7560], [76.8520, 28.7575], [76.8490, 28.7575], [76.8490, 28.7560]]]}},
+    {"type": "Feature", "id": "KH-108//14", "properties": {"khasra_no": "KH-108//14"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8520, 28.7560], [76.8550, 28.7560], [76.8550, 28.7575], [76.8520, 28.7575], [76.8520, 28.7560]]]}},
+    {"type": "Feature", "id": "KH-108//15", "properties": {"khasra_no": "KH-108//15"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8550, 28.7560], [76.8580, 28.7560], [76.8580, 28.7575], [76.8550, 28.7575], [76.8550, 28.7560]]]}},
+
+    {"type": "Feature", "id": "KH-110//9", "properties": {"khasra_no": "KH-110//9"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8400, 28.7540], [76.8430, 28.7540], [76.8430, 28.7555], [76.8400, 28.7555], [76.8400, 28.7540]]]}},
+    {"type": "Feature", "id": "KH-110//10", "properties": {"khasra_no": "KH-110//10"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8430, 28.7540], [76.8460, 28.7540], [76.8460, 28.7555], [76.8430, 28.7555], [76.8430, 28.7540]]]}},
+    {"type": "Feature", "id": "KH-112//7", "properties": {"khasra_no": "KH-112//7"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8460, 28.7540], [76.8490, 28.7540], [76.8490, 28.7555], [76.8460, 28.7555], [76.8460, 28.7540]]]}},
+    {"type": "Feature", "id": "KH-112//8", "properties": {"khasra_no": "KH-112//8"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8490, 28.7540], [76.8520, 28.7540], [76.8520, 28.7555], [76.8490, 28.7555], [76.8490, 28.7540]]]}},
+    {"type": "Feature", "id": "KH-116//21", "properties": {"khasra_no": "KH-116//21"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8520, 28.7540], [76.8550, 28.7540], [76.8550, 28.7555], [76.8520, 28.7555], [76.8520, 28.7540]]]}},
+    {"type": "Feature", "id": "KH-116//22", "properties": {"khasra_no": "KH-116//22"}, "geometry": {"type": "Polygon", "coordinates": [[[76.8550, 28.7540], [76.8580, 28.7540], [76.8580, 28.7555], [76.8550, 28.7555], [76.8550, 28.7540]]]}}
   ]
 }
