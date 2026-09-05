@@ -1,15 +1,31 @@
 import os
 
-# Dynamic In-Memory Synthesizer (Instant 0ms Latency & 100% Unique Per Parcel)
-def generate_dynamic_mitigation_steps(khasra_no: str, project_name: str, delay_days: int, shap_drivers: list, fallback_action: dict) -> list:
+# Dynamic In-Memory Synthesizer (Instant 0ms Latency & Statutorily Accurate Per Parcel)
+def generate_dynamic_mitigation_steps(
+    khasra_no: str, 
+    project_name: str, 
+    delay_days: int, 
+    shap_drivers: list, 
+    fallback_action: dict
+) -> list:
     """
-    Synthesizes plot-specific, mathematically tailored statutory directives instantly
+    Synthesizes parcel-specific, mathematically tailored statutory directives instantly
     without external API latency blocking the UI.
     """
+    category = fallback_action.get("category", "")
+    
+    # 0. Statutory Hard Guardrail: Lapsed Proceedings under RFCTLARR Sec 19(7)
+    if "Statutory Abatement" in category:
+        return [
+            f"De-Novo Section 11 Notification: Direct Competent Authority (CALA) to issue fresh preliminary notification for {khasra_no} following statutory abatement.",
+            "Re-conduct Social Impact Assessment (SIA): Request expeditious waiver/fast-track SIA update from State Revenue Department citing infrastructure continuity.",
+            "Alignment Priority Freeze: Direct Project Director ({project_name}) to maintain freeze on contiguous stretch alignment to avoid corridor redesign."
+        ]
+
     if not shap_drivers:
         return [
             f"Statutory Notice for {khasra_no}: Issue Section 37 award declaration.",
-            f"PFMS Clearance: Direct CALA account wing to disburse compensation.",
+            "PFMS Clearance: Direct CALA account wing to disburse compensation.",
             "Possession Handover: Deploy Kanungo team for physical corridor peg-marking."
         ]
 
@@ -23,10 +39,10 @@ def generate_dynamic_mitigation_steps(khasra_no: str, project_name: str, delay_d
     # 1. Litigation & Court Stay Bottlenecks
     if "court_stay" in factor or "litigation" in factor:
         steps.append(
-            f"Vacate Stay for {khasra_no} (Contributing {impact}d / {pct}%): Direct District Attorney & CALA Legal Cell to file urgent Interlocutory Application under Section 20A of Specific Relief Act."
+            f"Vacate Stay for {khasra_no} (Contributing +{impact}d / {pct}%): Direct District Attorney & CALA Legal Cell to file urgent Interlocutory Application under Section 20A of Specific Relief Act."
         )
         steps.append(
-            f"Section 77(2) Escrow Deposit: Deposit contested compensation for {khasra_no} directly with the LARA Authority to issue Section 38 possession without awaiting suit disposal."
+            f"Section 77(2) Escrow Deposit: Deposit contested compensation for {khasra_no} directly with the LARA Authority to enable Section 38 possession without awaiting suit disposal."
         )
         steps.append(
             f"High Court Infrastructure Bench: CALA to pray for day-to-day expedited hearing citing the {delay_days}-day projected corridor disruption."
@@ -38,34 +54,34 @@ def generate_dynamic_mitigation_steps(khasra_no: str, project_name: str, delay_d
             f"14-Day Summary Partition Drive ({khasra_no}): Direct Tehsildar to launch village-level camp to issue provisional apportionment orders for all co-sharers (Resolves +{impact}d delay)."
         )
         steps.append(
-            f"Indemnity Bond Payouts: Authorize CALA to release undisputed inheritance shares against registered indemnity bonds under State Land Acquisition Rules."
+            "Indemnity Bond Payouts: Authorize CALA to release undisputed inheritance shares against registered indemnity bonds under State Land Acquisition Rules."
         )
         steps.append(
-            f"DLSA Lok Adalat Conciliation: Schedule urgent pre-litigation settlement bench to resolve family succession gridlock on-spot."
+            "DLSA Lok Adalat Conciliation: Schedule urgent pre-litigation settlement bench to resolve family succession gridlock on-spot."
         )
 
     # 3. Forest & Environmental Clearances
     elif "forest" in factor:
         steps.append(
-            f"PARIVESH Portal Stage-II Expedite: Direct DFO and NHAI Project Director to upload compliance certificate within 7 days (Mitigates {impact}d risk)."
+            f"PARIVESH Portal Stage-II Expedite: Direct DFO and Project Director to upload compliance certificate within 7 days (Mitigates +{impact}d risk)."
         )
         steps.append(
-            f"CAMPA Fund Transfer: Authorize instant online DBT transfer of Net Present Value (NPV) & Compensatory Afforestation charges."
+            "CAMPA Fund Transfer: Authorize instant online DBT transfer of Net Present Value (NPV) & Compensatory Afforestation charges."
         )
         steps.append(
-            f"Section 2 Working Permission: Request Principal Chief Conservator of Forests (PCCF) for provisional right-of-way access."
+            "Section 2 Working Permission: Request Principal Chief Conservator of Forests (PCCF) for provisional right-of-way access."
         )
 
     # 4. Statutory Lapsing Watchdog (Section 19(7))
-    elif "statutory" in factor or delay_days > 250:
+    elif "statutory" in factor or delay_days > 250 or "Statutory Compliance" in category:
         steps.append(
-            f"Emergency Section 19 Gazette Publication: Direct District Magistrate (DM) to sign final declaration for {khasra_no} within 48h to prevent legal lapsing under Section 19(7)."
+            f"Emergency Section 19 Gazette Publication: Direct District Magistrate (DM) to sign final declaration for {khasra_no} within 48h to prevent statutory lapse under Section 19(7)."
         )
         steps.append(
-            f"72-Hour Boundary Demarcation: Deploy dedicated Kanungo and Revenue Task Force to freeze contiguous alignment boundaries."
+            "72-Hour Boundary Demarcation: Deploy dedicated Kanungo and Revenue Task Force to freeze contiguous alignment boundaries."
         )
         steps.append(
-            f"State Press Priority Dispatch: Transmit e-Gazette notification directly to the Government Printing Press under executive priority."
+            "State Press Priority Dispatch: Transmit e-Gazette notification directly to the Government Printing Press under executive priority."
         )
 
     # 5. Compensation & Disbursement Gaps
@@ -74,10 +90,10 @@ def generate_dynamic_mitigation_steps(khasra_no: str, project_name: str, delay_d
             f"PFMS Bulk DBT Drive for {khasra_no}: CALA accounts unit to disburse pending award amount to clear the +{impact}d financial roadblock."
         )
         steps.append(
-            f"Special Banking Redressal Camp: Set up Aadhaar-seeding desk at Panchayat Bhavan for instant account validation."
+            "Special Banking Redressal Camp: Set up bank account verification desk at Panchayat Bhavan for instant validation."
         )
         steps.append(
-            f"Section 38 Formal Notice: Issue mandatory 60-day physical possession notice to land occupants upon clearing 80% award threshold."
+            "Section 38 Formal Notice: Issue mandatory 60-day physical possession notice to land occupants upon clearing 80% award threshold."
         )
 
     return steps

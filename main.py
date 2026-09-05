@@ -1,12 +1,11 @@
-import json
-import os
-from typing import Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-import joblib
-import pandas as pd
 from pydantic import BaseModel
+import pandas as pd
+import json
+import joblib
 import shap
+from pathlib import Path
 from prompt_pipeline import generate_dynamic_mitigation_steps
 
 app = FastAPI(title="SIH26017 Land Acquisition Analytics Engine")
@@ -20,24 +19,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 1. Load ML Artifacts & Data
-artifacts = joblib.load("land_model.joblib")
+# Base directory setup for robust file loading
+BASE_DIR = Path(__file__).resolve().parent
+
+# 1. Load ML Artifacts & Data Safely (Looking inside backend folder)
+artifacts = joblib.load(BASE_DIR / "backend" / "land_model.joblib") if (BASE_DIR / "backend" / "land_model.joblib").exists() else joblib.load(BASE_DIR / "land_model.joblib")
 model = artifacts["model"]
 explainer = artifacts["explainer"]
 expected_cols = artifacts["feature_names"]
 
-with open("mockData.json", "r") as f:
+with open(BASE_DIR / "backend" / "mockData.json", "r", encoding="utf-8") as f:
     mock_list = json.load(f)
     raw_plots = {item["khasra_no"]: item for item in mock_list}
 
-# Load Cadastral GeoJSON (Real Surveyed Polygon Boundaries)
-geojson_parcels = None
-if os.path.exists("parcels.geojson"):
-    try:
-        with open("parcels.geojson", "r", encoding="utf-8") as f:
-            geojson_parcels = json.load(f)
-    except Exception as e:
-        print(f"Warning: parcels.geojson load failed ({e}), fallback grid will be used.")
+# Load real GeoJSON cadastral polygons from backend folder
+with open(BASE_DIR / "backend" / "parcels.geojson", "r", encoding="utf-8") as f:
+    raw_geojson = json.load(f)
 
 
 # 2. Prescriptive Recommendation Engine (Administrative Rules)
@@ -89,64 +86,27 @@ def get_prescriptive_action(top_factor: str, plot: dict) -> dict:
 # ==========================================
 
 
-# Endpoint 1: GeoJSON Map Data (Real Farmland Coordinates with Safe Fallback)
+# Endpoint 1: GeoJSON Map Data (Reads real irregular polygons from parcels.geojson & syncs with mockData)
 @app.get("/api/parcels")
 def get_parcels():
-    if geojson_parcels:
-        return geojson_parcels
-
-    # Fallback: Synthetic Cadastral Grid if file is unavailable
-    plots_list = list(raw_plots.values())[:25]
-    base_lat = 28.7510
-    base_lng = 76.9150
-    features = []
-    grid_cols = 5
-
-    for idx, plot in enumerate(plots_list):
-        row = idx // grid_cols
-        col = idx % grid_cols
-
-        w = 0.0016
-        h = 0.0011
-
-        min_lng = base_lng + (col * w)
-        max_lng = min_lng + (w * 0.92)
-        min_lat = base_lat + (row * h)
-        max_lat = min_lat + (h * 0.90)
-
-        polygon_coords = [
-            [
-                [round(min_lng, 6), round(min_lat, 6)],
-                [round(max_lng, 6), round(min_lat, 6)],
-                [round(max_lng, 6), round(max_lat, 6)],
-                [round(min_lng, 6), round(max_lat, 6)],
-                [round(min_lng, 6), round(min_lat, 6)],
-            ]
-        ]
-
-        features.append(
-            {
-                "type": "Feature",
-                "id": plot["khasra_no"],
-                "properties": {
-                    "khasra_no": plot["khasra_no"],
-                    "village": plot.get("village", ""),
-                    "project": plot.get("project", ""),
-                    "stage": plot.get("stage", ""),
-                    "risk_tier": plot.get("risk_tier", ""),
-                    "delay_days": plot.get("delay_days", 0),
-                    "status_color": plot.get("status_color", "green"),
-                    "statutory_days_left": plot.get("statutory_days_left", 365),
-                    "disbursement_pct": plot.get("disbursement_pct", 0.0),
-                },
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": polygon_coords,
-                },
-            }
-        )
-
-    return {"type": "FeatureCollection", "features": features}
+    updated_features = []
+    for feature in raw_geojson.get("features", []):
+        khasra = feature["properties"].get("khasra_no")
+        if khasra in raw_plots:
+            plot = raw_plots[khasra]
+            feature["properties"].update({
+                "village": plot.get("village"),
+                "project": plot.get("project"),
+                "stage": plot.get("stage"),
+                "risk_tier": plot.get("risk_tier"),
+                "delay_days": plot.get("delay_days"),
+                "status_color": plot.get("status_color"),
+                "statutory_days_left": plot.get("statutory_days_left"),
+                "disbursement_pct": plot.get("disbursement_pct"),
+            })
+        updated_features.append(feature)
+        
+    return {"type": "FeatureCollection", "features": updated_features}
 
 
 # Endpoint 2: High-level Watchdog Dashboard Metrics
@@ -164,7 +124,7 @@ def get_summary():
     )
     avg_disbursement = round(
         sum(p["disbursement_pct"] for p in plots_list) / total_parcels, 1
-    )
+    ) if total_parcels > 0 else 0.0
 
     return {
         "total_parcels": total_parcels,
@@ -279,3 +239,7 @@ def simulate_mitigation(req: SimulationRequest):
             else "Needs further action"
         ),
     }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

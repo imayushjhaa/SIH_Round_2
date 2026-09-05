@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, useMap, ZoomControl } from "react-leaflet";
 import { 
   AlertTriangle, 
   CheckCircle2, 
@@ -18,7 +18,10 @@ import {
   Check,
   Calendar,
   ShieldAlert,
-  AlertOctagon
+  AlertOctagon,
+  Download,
+  Sun,
+  Moon
 } from "lucide-react";
 
 const BACKEND_URL = "http://127.0.0.1:8000";
@@ -64,7 +67,7 @@ function MapController({ selectedPlot, geoData }) {
         [Math.min(...lats), Math.min(...lngs)],
         [Math.max(...lats), Math.max(...lngs)],
       ];
-      map.flyToBounds(bounds, { padding: [60, 60], maxZoom: 18, duration: 1.2 });
+      map.flyToBounds(bounds, { padding: [50, 50], maxZoom: 18, duration: 1.2 });
     }
   }, [selectedPlot, geoData, map]);
 
@@ -72,7 +75,7 @@ function MapController({ selectedPlot, geoData }) {
 }
 
 // Sub-component: RFCTLARR Statutory Pipeline & Timeline Monitor
-function StatutoryTimelineModule({ plotInfo }) {
+function StatutoryTimelineModule({ plotInfo, darkMode }) {
   const getStageIndex = (stageName) => {
     if (!stageName) return 0;
     const s = stageName.toLowerCase();
@@ -90,21 +93,29 @@ function StatutoryTimelineModule({ plotInfo }) {
   const deadline = calculateSec19Deadline(plotInfo.sec_11_date);
 
   return (
-    <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-3">
+    <div className={`p-3 rounded-lg border space-y-2.5 ${
+      darkMode ? "bg-slate-800/80 border-slate-700" : "bg-slate-50 border-slate-200"
+    }`}>
       <div className="flex justify-between items-center">
-        <span className="text-[11px] font-bold tracking-wide uppercase text-slate-700 flex items-center gap-1.5">
-          <Scale size={13} className="text-amber-600" /> RFCTLARR Statutory Pipeline
+        <span className={`text-[11px] font-bold tracking-wide uppercase flex items-center gap-1.5 ${
+          darkMode ? "text-slate-200" : "text-slate-700"
+        }`}>
+          <Scale size={13} className="text-amber-500" /> RFCTLARR Statutory Pipeline
         </span>
-        <span className="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-semibold">
+        <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${
+          darkMode ? "bg-slate-700 text-slate-300" : "bg-slate-200 text-slate-700"
+        }`}>
           Stage {activeIndex + 1} of 5
         </span>
       </div>
 
       {/* 5-Stage Stepper Track */}
-      <div className="relative flex items-center justify-between pt-1 pb-1">
-        <div className="absolute top-[13px] left-3 right-3 h-0.5 bg-slate-200 z-0"></div>
+      <div className="relative flex items-center justify-between pt-0.5 pb-0.5">
+        <div className={`absolute top-[12px] left-3 right-3 h-0.5 z-0 ${
+          darkMode ? "bg-slate-700" : "bg-slate-200"
+        }`}></div>
         <div 
-          className="absolute top-[13px] left-3 h-0.5 bg-emerald-500 z-0 transition-all duration-500"
+          className="absolute top-[12px] left-3 h-0.5 bg-emerald-500 z-0 transition-all duration-500"
           style={{ width: `${(activeIndex / (STATUTORY_STAGES.length - 1)) * 90}%` }}
         ></div>
 
@@ -115,69 +126,75 @@ function StatutoryTimelineModule({ plotInfo }) {
           return (
             <div key={stg.id} className="relative z-10 flex flex-col items-center">
               <div 
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+                className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold transition-all ${
                   isDone 
                     ? "bg-emerald-500 text-white shadow-xs" 
                     : isCurrent 
                     ? isLapsed
-                      ? "bg-red-600 text-white ring-4 ring-red-100 animate-pulse"
-                      : "bg-blue-600 text-white ring-4 ring-blue-100 shadow-sm" 
+                      ? "bg-red-600 text-white ring-4 ring-red-500/30 animate-pulse"
+                      : "bg-blue-600 text-white ring-4 ring-blue-500/30 shadow-sm" 
+                    : darkMode 
+                    ? "bg-slate-800 text-slate-500 border border-slate-600" 
                     : "bg-white text-slate-400 border-2 border-slate-300"
                 }`}
               >
-                {isDone ? <Check size={12} strokeWidth={3} /> : idx + 1}
+                {isDone ? <Check size={11} strokeWidth={3} /> : idx + 1}
               </div>
               <span 
-                className={`text-[9px] mt-1.5 font-semibold whitespace-nowrap ${
+                className={`text-[9px] mt-1 font-semibold whitespace-nowrap ${
                   isCurrent 
-                    ? isLapsed ? "text-red-700 font-bold" : "text-blue-700 font-bold" 
+                    ? isLapsed ? "text-red-500 font-bold" : "text-blue-400 font-bold" 
                     : isDone 
-                    ? "text-emerald-700" 
-                    : "text-slate-400"
+                    ? "text-emerald-500" 
+                    : darkMode ? "text-slate-500" : "text-slate-400"
                 }`}
               >
                 {stg.label}
               </span>
-              <span className="text-[8px] text-slate-400 scale-90 -mt-0.5">{stg.window}</span>
+              <span className={`text-[8px] scale-90 -mt-0.5 ${
+                darkMode ? "text-slate-500" : "text-slate-400"
+              }`}>{stg.window}</span>
             </div>
           );
         })}
       </div>
 
       {/* Statutory Timeline Details & Expiry Card */}
-      <div className={`p-2.5 rounded border text-xs space-y-1.5 ${
+      <div className={`p-2 rounded border text-xs space-y-1 ${
         isLapsed 
-          ? "bg-red-50/80 border-red-300 text-red-900" 
+          ? darkMode ? "bg-red-950/40 border-red-800/80 text-red-200" : "bg-red-50/80 border-red-300 text-red-900"
           : isCritical 
-          ? "bg-amber-50/80 border-amber-300 text-amber-900" 
-          : "bg-white border-slate-200 text-slate-700"
+          ? darkMode ? "bg-amber-950/40 border-amber-800/80 text-amber-200" : "bg-amber-50/80 border-amber-300 text-amber-900"
+          : darkMode ? "bg-slate-900/90 border-slate-700 text-slate-300" : "bg-white border-slate-200 text-slate-700"
       }`}>
-        <div className="flex items-center justify-between font-medium">
+        <div className="flex items-center justify-between font-medium text-[11px]">
           <span className="flex items-center gap-1">
-            <Calendar size={12} className="text-slate-500" /> Sec 11 Notification:
+            <Calendar size={11} className={darkMode ? "text-slate-400" : "text-slate-500"} /> Sec 11 Notification:
           </span>
-          <span className="font-semibold text-slate-900">{formatLegalDate(plotInfo.sec_11_date)}</span>
+          <span className={`font-semibold ${darkMode ? "text-slate-100" : "text-slate-900"}`}>{formatLegalDate(plotInfo.sec_11_date)}</span>
         </div>
 
-        <div className="flex items-center justify-between font-medium">
+        <div className="flex items-center justify-between font-medium text-[11px]">
           <span className="flex items-center gap-1">
-            <Clock size={12} className="text-slate-500" /> Sec 19 Lapsing Deadline:
+            <Clock size={11} className={darkMode ? "text-slate-400" : "text-slate-500"} /> Sec 19 Deadline:
           </span>
-          <span className="font-semibold text-slate-900">{deadline}</span>
+          <span className={`font-semibold ${darkMode ? "text-slate-100" : "text-slate-900"}`}>{deadline}</span>
         </div>
 
-        <div className="pt-1 border-t border-slate-200/60 flex items-center justify-between font-bold">
+        <div className={`pt-1 border-t flex items-center justify-between font-bold text-[11px] ${
+          darkMode ? "border-slate-700" : "border-slate-200/60"
+        }`}>
           <span>Statutory Status:</span>
           {isLapsed ? (
-            <span className="text-red-600 flex items-center gap-1 text-[11px]">
-              <ShieldAlert size={12} /> LAPSED under Sec 19(7) ({Math.abs(plotInfo.statutory_days_left)}d Overdue)
+            <span className="text-red-400 flex items-center gap-1">
+              <ShieldAlert size={11} /> LAPSED under Sec 19(7) ({Math.abs(plotInfo.statutory_days_left)}d Overdue)
             </span>
           ) : isCritical ? (
-            <span className="text-amber-700 flex items-center gap-1 text-[11px]">
-              <AlertTriangle size={12} /> Expiration Imminent ({plotInfo.statutory_days_left} Days Left)
+            <span className="text-amber-400 flex items-center gap-1">
+              <AlertTriangle size={11} /> Expiration Imminent ({plotInfo.statutory_days_left}d Left)
             </span>
           ) : (
-            <span className="text-emerald-700 text-[11px]">
+            <span className="text-emerald-400">
               Active ({plotInfo.statutory_days_left} Days Remaining)
             </span>
           )}
@@ -195,7 +212,10 @@ export default function App() {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [showNoticeModal, setShowNoticeModal] = useState(false);
 
-  // Search & Filter State
+  // Night Mode State
+  const [darkMode, setDarkMode] = useState(true);
+
+  // Search & Filter State ("ALL", "LAPSE", "HIGH_RISK", "SAFE")
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("ALL");
 
@@ -242,6 +262,72 @@ export default function App() {
     }
   };
 
+  // Executive CSV Dossier Generator
+  const exportLapsingDossierCSV = () => {
+    if (!geoData?.features) return;
+
+    const criticalParcels = geoData.features.filter((f) => {
+      const p = f.properties;
+      return (
+        p.statutory_days_left < 45 ||
+        p.risk_tier === "Critical" ||
+        p.risk_tier === "High" ||
+        p.status_color === "red"
+      );
+    });
+
+    const headers = [
+      "Khasra No",
+      "Village",
+      "Corridor Project",
+      "Current Statutory Stage",
+      "Statutory Days Left",
+      "Legal Compliance Status",
+      "Risk Tier",
+      "Disbursement Pct",
+      "Mandated Action Rule"
+    ];
+
+    const rows = criticalParcels.map((f) => {
+      const p = f.properties;
+      const isLapsed = p.statutory_days_left < 0;
+      const legalStatus = isLapsed 
+        ? `LAPSED (${Math.abs(p.statutory_days_left)}d Overdue)` 
+        : p.statutory_days_left < 45 
+        ? `CRITICAL (${p.statutory_days_left}d Left)` 
+        : "High Risk Monitored";
+
+      const mandatedAction = isLapsed
+        ? "Re-issue Section 11 Notification"
+        : p.statutory_days_left < 45
+        ? "Emergency Section 19 Gazette Publication"
+        : "Expedite Hearing & Disbursement";
+
+      return [
+        `"${p.khasra_no}"`,
+        `"${p.village || 'N/A'}"`,
+        `"${p.project || 'N/A'}"`,
+        `"${p.stage || 'N/A'}"`,
+        p.statutory_days_left,
+        `"${legalStatus}"`,
+        `"${p.risk_tier}"`,
+        `"${p.disbursement_pct}%"`,
+        `"${mandatedAction}"`
+      ];
+    });
+
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
+      + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `PRAGATI_Land_Lapsing_Dossier_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const runSimulation = () => {
     if (!selectedPlot) return;
     axios.post(`${BACKEND_URL}/api/simulate`, {
@@ -266,17 +352,17 @@ export default function App() {
     const props = feature.properties;
     const isSelected = selectedPlot === props.khasra_no;
     
-    // Statutory Reality Check:
-    // Lapsed (< 0) or nearing statutory lapse (< 45 days) MUST render RED under RFCTLARR Sec 19(7)
     const isStatutoryCritical = props.statutory_days_left < 45 && props.stage !== "Possession Taken";
     let effectiveColor = isStatutoryCritical ? "red" : props.status_color;
 
-    // Check Filter Criteria
+    // Filter Logic
     let matchesFilter = true;
     if (activeFilter === "LAPSE") {
       matchesFilter = isStatutoryCritical;
     } else if (activeFilter === "HIGH_RISK") {
       matchesFilter = props.risk_tier === "Critical" || props.risk_tier === "High" || effectiveColor === "red";
+    } else if (activeFilter === "SAFE") {
+      matchesFilter = effectiveColor === "green";
     }
 
     if (searchQuery.trim()) {
@@ -287,7 +373,6 @@ export default function App() {
       );
     }
 
-    // Dynamic Simulation Recolor
     const isSimulatedPlot = simResult && simResult.khasra_no === props.khasra_no;
     if (isSimulatedPlot) {
       if (simResult.new_predicted_delay_days < 45) {
@@ -297,143 +382,332 @@ export default function App() {
       }
     }
 
-    const baseFill = effectiveColor === "red" ? "#ef4444" : effectiveColor === "yellow" ? "#eab308" : "#22c55e";
+    let fill = effectiveColor === "red" ? "#ef4444" : effectiveColor === "yellow" ? "#eab308" : "#22c55e";
+    let fillOp = matchesFilter ? (isSelected ? 0.85 : 0.5) : 0.08;
+
+    if (isStatutoryCritical && !isSimulatedPlot) {
+      fill = "url(#statutory-lapse-stripes)";
+      fillOp = matchesFilter ? (isSelected ? 1 : 0.95) : 0.15;
+    }
 
     return {
-      fillColor: baseFill,
-      weight: isSelected ? 3.5 : 1.5,
+      fillColor: fill,
+      weight: isSelected ? 3.5 : isStatutoryCritical ? 2.5 : 1.5,
       opacity: matchesFilter ? 0.95 : 0.2,
-      color: isSelected ? "#38bdf8" : isSimulatedPlot ? "#22c55e" : "#ffffff",
-      dashArray: isSelected ? "" : "3",
-      fillOpacity: matchesFilter ? (isSelected ? 0.8 : 0.45) : 0.08
+      color: isSelected ? "#38bdf8" : isStatutoryCritical ? "#ef4444" : isSimulatedPlot ? "#22c55e" : "#ffffff",
+      dashArray: isSelected ? "" : isStatutoryCritical ? "4, 2" : "3",
+      fillOpacity: fillOp
     };
   };
 
   const isPlotLapsed = plotDetails && plotDetails.plot_info.statutory_days_left < 0;
 
+  // Safe Parcels dynamic count
+  const safeCount = geoData?.features
+    ? geoData.features.filter(f => {
+        const p = f.properties;
+        const isCritical = p.statutory_days_left < 45 && p.stage !== "Possession Taken";
+        return !isCritical && p.status_color === "green";
+      }).length
+    : (summary?.safe_parcels ?? 6);
+
   return (
-    <div className="flex flex-col h-screen bg-slate-100 font-sans text-slate-800">
-      {/* Top Header */}
-      <header className="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shadow-md">
-        <div>
-          <h1 className="text-xl font-bold tracking-wide flex items-center gap-2">
-            <Scale className="text-amber-400" size={24} />
-            PRAGATI-Land : Statutory Compliance & Delay Mitigation Engine
-          </h1>
-          <p className="text-xs text-slate-400">
-            RFCTLARR Act 2013 Statutory Timeline Monitor & Decision Support System
-          </p>
+    <div className={`flex flex-col h-screen font-sans transition-colors duration-300 ${
+      darkMode ? "bg-slate-950 text-slate-100" : "bg-slate-100 text-slate-800"
+    }`}>
+      
+      {/* Hidden Global SVG Defs for Canvas Fill Patterns */}
+      <svg className="absolute w-0 h-0 pointer-events-none" aria-hidden="true">
+        <defs>
+          <pattern
+            id="statutory-lapse-stripes"
+            width="12"
+            height="12"
+            patternTransform="rotate(45 0 0)"
+            patternUnits="userSpaceOnUse"
+          >
+            <rect width="12" height="12" fill="#ef4444" fillOpacity="0.45" />
+            <line x1="0" y1="0" x2="0" y2="12" stroke="#dc2626" strokeWidth="2.8" />
+          </pattern>
+        </defs>
+      </svg>
+
+      {/* Global CSS for Leaflet & Removing Browser SVG Focus Borders */}
+      <style>{`
+        /* Remove browser default rectangular outline on clicked SVG polygons */
+        path.leaflet-interactive:focus,
+        path.leaflet-interactive:focus-visible,
+        .leaflet-container path:focus,
+        svg:focus,
+        svg *:focus {
+          outline: none !important;
+        }
+
+        .leaflet-top.leaflet-left .leaflet-control-zoom {
+          display: none !important;
+        }
+        .leaflet-bottom.leaflet-right .leaflet-control-zoom {
+          margin-bottom: 14px !important;
+          margin-right: 14px !important;
+          border-radius: 8px !important;
+          overflow: hidden !important;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
+          border: 1px solid #334155 !important;
+        }
+        .leaflet-control-zoom a {
+          background-color: rgba(15, 23, 42, 0.95) !important;
+          color: #f8fafc !important;
+          border-bottom: 1px solid #334155 !important;
+          width: 30px !important;
+          height: 30px !important;
+          line-height: 30px !important;
+          font-weight: bold !important;
+        }
+        .leaflet-control-zoom a:hover {
+          background-color: #1e293b !important;
+          color: #38bdf8 !important;
+        }
+      `}</style>
+
+      {/* Compact Top Header */}
+      <header className="bg-slate-900 text-white px-5 py-2.5 flex justify-between items-center shadow-md border-b border-slate-800">
+        <div className="flex items-center gap-3">
+          <div className="p-1.5 bg-amber-400/10 border border-amber-400/20 rounded-lg">
+            <Scale className="text-amber-400" size={20} />
+          </div>
+          <div>
+            <h1 className="text-base font-bold tracking-wide flex items-center gap-2 text-slate-100">
+              PRAGATI-Land <span className="text-slate-500 font-normal">|</span> <span className="text-xs font-medium text-slate-300">Statutory Compliance & Delay Mitigation Engine</span>
+            </h1>
+            <p className="text-[10px] text-slate-400">
+              RFCTLARR Act 2013 Statutory Timeline Monitor & Decision Support System
+            </p>
+          </div>
         </div>
-        <div className="text-xs bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 text-amber-300 font-medium">
-          Active Stretch: {summary?.active_corridor || "Loading..."}
+        
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={exportLapsingDossierCSV}
+            className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition-all cursor-pointer"
+            title="Download CSV report of all lapsed and critical parcels"
+          >
+            <Download size={13} /> Export Lapsing Dossier
+          </button>
+
+          {/* Night Mode / Theme Toggle Button */}
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className={`p-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold ${
+              darkMode 
+                ? "bg-slate-800 border-slate-700 text-amber-300 hover:bg-slate-750" 
+                : "bg-slate-800 border-slate-700 text-slate-300 hover:text-white"
+            }`}
+            title={darkMode ? "Switch to Light Theme" : "Switch to Dark Mode"}
+          >
+            {darkMode ? <Sun size={14} className="text-amber-400" /> : <Moon size={14} />}
+            <span className="hidden sm:inline">{darkMode ? "Day" : "Night"}</span>
+          </button>
+
+          <div className="text-[11px] bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 text-amber-300 font-medium">
+            Active: {summary?.active_corridor || "Loading..."}
+          </div>
         </div>
       </header>
 
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-4 gap-4 px-6 py-3 bg-white border-b border-slate-200">
-        <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-          <p className="text-xs text-slate-500 font-medium">Total Land Parcels</p>
-          <p className="text-2xl font-bold text-slate-800 mt-1">{summary?.total_parcels ?? "--"}</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">Contiguous Corridor Sector</p>
-        </div>
-
-        <div className="p-3 bg-red-50/70 border border-red-200 rounded-lg">
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-red-700 font-semibold flex items-center gap-1.5">
-              <AlertTriangle size={14} className="text-red-500" /> Section 19 Lapse Alert
-            </p>
-            <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-              &lt; 45 Days
-            </span>
+      {/* 5-Column Executive KPI Strip */}
+      <div className={`grid grid-cols-5 gap-2.5 px-5 py-2 border-b transition-colors ${
+        darkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
+      }`}>
+        
+        {/* Metric 1: Total Parcels */}
+        <div 
+          onClick={() => setActiveFilter("ALL")}
+          title="Click to view all corridor parcels"
+          className={`flex items-center justify-between px-3 py-1.5 rounded-lg cursor-pointer select-none transition-all ${
+            activeFilter === "ALL" 
+              ? darkMode 
+                ? "bg-slate-800 border-2 border-slate-500 shadow-md ring-2 ring-slate-600/40 scale-[1.01]" 
+                : "bg-slate-100 border-2 border-slate-600 shadow-sm ring-2 ring-slate-400/20 scale-[1.01]"
+              : darkMode 
+              ? "bg-slate-800/60 border border-slate-750 hover:bg-slate-800 hover:border-slate-700" 
+              : "bg-slate-50 border border-slate-200 hover:bg-slate-100/70 hover:border-slate-300"
+          }`}
+        >
+          <div>
+            <div className="flex items-center gap-1">
+              <p className={`text-[10px] font-bold uppercase tracking-wider ${
+                darkMode ? "text-slate-300" : "text-slate-600"
+              }`}>Total Parcels</p>
+              {activeFilter === "ALL" && (
+                <span className="text-[8px] bg-slate-700 text-amber-300 px-1 py-0.2 rounded font-bold uppercase">Active</span>
+              )}
+            </div>
+            <p className="text-[10px] text-slate-400">All corridor plots</p>
           </div>
-          <p className="text-2xl font-bold text-red-700 mt-1">{summary?.critical_lapsing_parcels ?? "--"}</p>
-          <p className="text-[11px] text-red-500/80 mt-0.5">Parcels nearing statutory cancellation</p>
+          <p className={`text-lg font-extrabold ${darkMode ? "text-white" : "text-slate-800"}`}>{summary?.total_parcels ?? "--"}</p>
         </div>
 
-        <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-lg">
-          <p className="text-xs text-amber-700 font-medium">High Delay Risk Parcels</p>
-          <p className="text-2xl font-bold text-amber-800 mt-1">{summary?.high_risk_parcels ?? "--"}</p>
-          <p className="text-[11px] text-amber-600/80 mt-0.5">Predicted delay exceeding 90 days</p>
+        {/* Metric 2: Section 19 Lapse Alert */}
+        <div 
+          onClick={() => setActiveFilter(activeFilter === "LAPSE" ? "ALL" : "LAPSE")}
+          title="Click to isolate statutory critical and lapsed parcels (<45d)"
+          className={`flex items-center justify-between px-3 py-1.5 rounded-lg cursor-pointer select-none transition-all ${
+            activeFilter === "LAPSE" 
+              ? darkMode
+                ? "bg-red-950/70 border-2 border-red-500 shadow-md ring-2 ring-red-500/40 scale-[1.01]"
+                : "bg-red-100/90 border-2 border-red-600 shadow-md ring-2 ring-red-500/30 scale-[1.01]" 
+              : darkMode
+              ? "bg-red-950/30 border border-red-900/60 hover:bg-red-950/50"
+              : "bg-red-50/70 border border-red-200 hover:bg-red-100/60 hover:border-red-300"
+          }`}
+        >
+          <div>
+            <div className="flex items-center gap-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-red-500 flex items-center gap-1">
+                <AlertTriangle size={11} className="text-red-500" /> Sec 19 Lapse
+              </p>
+              <span className={`text-[8px] px-1 py-0.2 rounded font-bold uppercase ${
+                activeFilter === "LAPSE" ? "bg-red-600 text-white animate-pulse" : "bg-red-200 text-red-800"
+              }`}>
+                {activeFilter === "LAPSE" ? "Active" : "<45d"}
+              </span>
+            </div>
+            <p className="text-[10px] text-red-400/90">Click to filter critical</p>
+          </div>
+          <p className="text-lg font-extrabold text-red-500">{summary?.critical_lapsing_parcels ?? "--"}</p>
         </div>
 
-        <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-lg">
-          <p className="text-xs text-emerald-700 font-medium">Avg Disbursement Velocity</p>
-          <p className="text-2xl font-bold text-emerald-800 mt-1">{summary?.avg_disbursement_pct ?? "--"}%</p>
-          <p className="text-[11px] text-emerald-600/80 mt-0.5">Award compensation cleared</p>
+        {/* Metric 3: High Delay Risk */}
+        <div 
+          onClick={() => setActiveFilter(activeFilter === "HIGH_RISK" ? "ALL" : "HIGH_RISK")}
+          title="Click to filter all operational delay parcels (>90 days)"
+          className={`flex items-center justify-between px-3 py-1.5 rounded-lg cursor-pointer select-none transition-all ${
+            activeFilter === "HIGH_RISK" 
+              ? darkMode
+                ? "bg-amber-950/70 border-2 border-amber-500 shadow-md ring-2 ring-amber-500/40 scale-[1.01]"
+                : "bg-amber-100/90 border-2 border-amber-600 shadow-md ring-2 ring-amber-500/30 scale-[1.01]" 
+              : darkMode
+              ? "bg-amber-950/30 border border-amber-900/60 hover:bg-amber-950/50"
+              : "bg-amber-50/70 border border-amber-200 hover:bg-amber-100/60 hover:border-amber-300"
+          }`}
+        >
+          <div>
+            <div className="flex items-center gap-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-500">High Delay Risk</p>
+              {activeFilter === "HIGH_RISK" && (
+                <span className="text-[8px] bg-amber-600 text-white px-1 py-0.2 rounded font-bold uppercase">Active</span>
+              )}
+            </div>
+            <p className="text-[10px] text-amber-400/90">&gt;90d delay plots</p>
+          </div>
+          <p className="text-lg font-extrabold text-amber-500">{summary?.high_risk_parcels ?? "--"}</p>
         </div>
+
+        {/* Metric 4: Safe / Cleared Parcels */}
+        <div 
+          onClick={() => setActiveFilter(activeFilter === "SAFE" ? "ALL" : "SAFE")}
+          title="Click to isolate safe parcels on track without active dispute"
+          className={`flex items-center justify-between px-3 py-1.5 rounded-lg cursor-pointer select-none transition-all ${
+            activeFilter === "SAFE" 
+              ? darkMode
+                ? "bg-emerald-950/70 border-2 border-emerald-500 shadow-md ring-2 ring-emerald-500/40 scale-[1.01]"
+                : "bg-emerald-100/90 border-2 border-emerald-600 shadow-md ring-2 ring-emerald-500/30 scale-[1.01]" 
+              : darkMode
+              ? "bg-emerald-950/30 border border-emerald-900/60 hover:bg-emerald-950/50"
+              : "bg-emerald-50/70 border border-emerald-200 hover:bg-emerald-100/60 hover:border-emerald-300"
+          }`}
+        >
+          <div>
+            <div className="flex items-center gap-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 flex items-center gap-1">
+                <CheckCircle2 size={11} className="text-emerald-500" /> Safe / Cleared
+              </p>
+              {activeFilter === "SAFE" && (
+                <span className="text-[8px] bg-emerald-600 text-white px-1 py-0.2 rounded font-bold uppercase">Active</span>
+              )}
+            </div>
+            <p className="text-[10px] text-emerald-400/90">On track, dispute-free</p>
+          </div>
+          <p className="text-lg font-extrabold text-emerald-500">{safeCount}</p>
+        </div>
+
+        {/* Metric 5: Avg Disbursement Velocity */}
+        <div 
+          title="RFCTLARR Sec 38 Mandate: Minimum 80% compensation required before physical possession"
+          className={`flex items-center justify-between px-3 py-1.5 rounded-lg select-none ${
+            darkMode ? "bg-slate-800/60 border border-slate-750" : "bg-slate-50 border border-slate-200"
+          }`}
+        >
+          <div>
+            <div className="flex items-center gap-1">
+              <p className={`text-[10px] font-bold uppercase tracking-wider ${
+                darkMode ? "text-slate-300" : "text-slate-700"
+              }`}>Disbursement</p>
+              <span className={`text-[8px] font-semibold px-1 py-0.2 rounded ${
+                darkMode ? "bg-slate-700 text-slate-300" : "bg-slate-200 text-slate-700"
+              }`}>Target: 80%</span>
+            </div>
+            <p className="text-[10px] text-slate-400">Award cleared</p>
+          </div>
+          <p className={`text-lg font-extrabold ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{summary?.avg_disbursement_pct ?? "--"}%</p>
+        </div>
+
       </div>
 
       {/* Main Workspace */}
-      <div className="flex flex-1 overflow-hidden p-4 gap-4">
+      <div className="flex flex-1 overflow-hidden p-3 gap-3">
         {/* Left Side: Cadastral Satellite Map */}
-        <div className="w-2/3 h-full relative rounded-xl overflow-hidden shadow-md border border-slate-300">
+        <div className={`w-2/3 h-full relative rounded-xl overflow-hidden shadow-md border ${
+          darkMode ? "border-slate-800" : "border-slate-300"
+        }`}>
           
-          {/* Map Controls */}
-          <div className="absolute top-3 right-3 z-[1000] flex items-center gap-2">
+          {/* Top-Left: Search Bar */}
+          <div className="absolute top-3 left-3 z-[1000]">
             <form onSubmit={handleSearchSubmit} className="relative">
               <input
                 type="text"
                 placeholder="Search Khasra (e.g. KH-643)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-slate-900/90 text-white text-xs px-3 py-2 pl-8 rounded-lg border border-slate-700 placeholder-slate-400 focus:outline-none focus:border-amber-400 shadow-md backdrop-blur-sm w-44 transition-all focus:w-52"
+                className="bg-slate-900/90 text-white text-xs px-3.5 py-2 pl-9 rounded-xl border border-slate-700 shadow-xl placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 backdrop-blur-md w-56 transition-all"
               />
-              <Search size={13} className="absolute left-2.5 top-2.5 text-slate-400" />
+              <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
             </form>
-
-            <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-lg border border-slate-700 backdrop-blur-sm shadow-md text-xs">
-              <button
-                type="button"
-                onClick={() => setActiveFilter("ALL")}
-                className={`px-2 py-1 rounded font-medium transition-all ${
-                  activeFilter === "ALL" 
-                    ? "bg-amber-400 text-slate-950 font-bold" 
-                    : "text-slate-300 hover:text-white"
-                }`}
-              >
-                All
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveFilter("LAPSE")}
-                className={`px-2 py-1 rounded font-medium flex items-center gap-1 transition-all ${
-                  activeFilter === "LAPSE" 
-                    ? "bg-red-500 text-white font-bold" 
-                    : "text-red-300 hover:text-white"
-                }`}
-              >
-                &lt;45d Lapse
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveFilter("HIGH_RISK")}
-                className={`px-2 py-1 rounded font-medium transition-all ${
-                  activeFilter === "HIGH_RISK" 
-                    ? "bg-amber-500 text-white font-bold" 
-                    : "text-amber-300 hover:text-white"
-                }`}
-              >
-                High Risk
-              </button>
-            </div>
           </div>
 
-          {/* Map Legend */}
-          <div className="absolute top-3 left-12 z-[1000] bg-slate-900/90 text-white px-3 py-2 rounded-md shadow-md border border-slate-700 text-xs flex gap-3 backdrop-blur-sm">
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-emerald-500 rounded-sm inline-block"></span> Safe</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-amber-500 rounded-sm inline-block"></span> Under Review</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-red-500 rounded-sm inline-block"></span> Dispute / Risk</span>
+          {/* Bottom-Left: Map Legend */}
+          <div className="absolute bottom-3 left-3 z-[1000] bg-slate-900/90 text-white px-3 py-1.5 rounded-lg shadow-xl border border-slate-700 text-xs flex items-center gap-3 backdrop-blur-md">
+            <span className="flex items-center gap-1.5 font-medium">
+              <span className="w-2.5 h-2.5 bg-emerald-500 rounded-xs inline-block"></span> Safe
+            </span>
+            <span className="flex items-center gap-1.5 font-medium">
+              <span className="w-2.5 h-2.5 bg-amber-500 rounded-xs inline-block"></span> Under Review
+            </span>
+            <span className="flex items-center gap-1.5 font-medium">
+              <span className="w-2.5 h-2.5 bg-red-500 rounded-xs inline-block"></span> Dispute
+            </span>
+            <span className="flex items-center gap-1.5 font-medium" title="Section 19(7) Imminent (<45d) or Abated Lapsed Parcel">
+              <span 
+                className="w-3 h-3 rounded-xs border border-red-500 inline-block shadow-xs" 
+                style={{
+                  background: "repeating-linear-gradient(45deg, #dc2626, #dc2626 2px, rgba(239, 68, 68, 0.45) 2px, rgba(239, 68, 68, 0.45) 6px)"
+                }}
+              ></span> 
+              <span className="text-red-300">Sec 19 Lapse</span>
+            </span>
           </div>
 
           {geoData && (
             <MapContainer 
               key="satellite-map"
-              center={[28.7545, 76.9185]} 
-              zoom={16} 
+              center={[28.7475, 76.8305]}
+              zoom={15} 
               maxZoom={19}
+              zoomControl={false}
               scrollWheelZoom={true} 
               className="w-full h-full"
             >
+              <ZoomControl position="bottomright" />
               <TileLayer
                 attribution='Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics'
                 url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -444,8 +718,9 @@ export default function App() {
                 style={polygonStyle}
                 onEachFeature={(feature, layer) => {
                   const isSim = simResult && simResult.khasra_no === feature.properties.khasra_no;
+                  const isLapse = feature.properties.statutory_days_left < 45 && feature.properties.stage !== "Possession Taken";
                   layer.bindTooltip(
-                    `<strong>${feature.properties.khasra_no}</strong><br/>${feature.properties.village}${isSim ? '<br/><span style="color:#22c55e;font-weight:bold">⚡ Simulation Active</span>' : ''}`,
+                    `<strong>${feature.properties.khasra_no}</strong><br/>${feature.properties.village}${isLapse ? '<br/><span style="color:#ef4444;font-weight:bold">⚠️ Sec 19 Statutory Risk</span>' : ''}${isSim ? '<br/><span style="color:#22c55e;font-weight:bold">⚡ Simulation Active</span>' : ''}`,
                     { direction: "top", opacity: 0.9 }
                   );
                   layer.on({
@@ -459,29 +734,33 @@ export default function App() {
         </div>
 
         {/* Right Side: Analytical & Prescriptive Drawer */}
-        <div className="w-1/3 h-full overflow-y-auto p-5 bg-white rounded-xl shadow-md border border-slate-200 space-y-4">
+        <div className={`w-1/3 h-full overflow-y-auto p-4 rounded-xl shadow-md border space-y-3.5 transition-colors ${
+          darkMode 
+            ? "bg-slate-900 border-slate-800 text-slate-100" 
+            : "bg-white border-slate-200 text-slate-800"
+        }`}>
           {!selectedPlot ? (
-            <div className="h-full flex flex-col items-center justify-center text-center text-slate-400">
-              <Layers size={48} className="mb-2 text-slate-300" />
-              <p className="font-medium">Select any Land Parcel (Khasra) on the map</p>
-              <p className="text-xs">Click a polygon or search above to inspect statutory timelines</p>
+            <div className="h-full flex flex-col items-center justify-center text-center">
+              <Layers size={44} className={`mb-2 ${darkMode ? "text-slate-700" : "text-slate-300"}`} />
+              <p className={`font-medium text-sm ${darkMode ? "text-slate-300" : "text-slate-600"}`}>Select any Land Parcel (Khasra) on the map</p>
+              <p className="text-xs text-slate-500">Click a polygon or search above to inspect statutory timelines</p>
             </div>
           ) : loadingDetails ? (
-            <p className="text-sm text-slate-500">Evaluating statutory compliance & running SHAP models...</p>
+            <p className="text-xs text-slate-400">Evaluating statutory compliance & running SHAP models...</p>
           ) : plotDetails && (
             <>
               {/* Parcel Header */}
-              <div className="border-b border-slate-200 pb-3">
+              <div className={`border-b pb-2.5 ${darkMode ? "border-slate-800" : "border-slate-200"}`}>
                 <div className="flex justify-between items-start">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900">{plotDetails.plot_info.khasra_no}</h2>
-                    <p className="text-xs text-slate-500">Village: {plotDetails.plot_info.village} | {plotDetails.plot_info.project}</p>
+                    <h2 className={`text-base font-bold ${darkMode ? "text-white" : "text-slate-900"}`}>{plotDetails.plot_info.khasra_no}</h2>
+                    <p className="text-xs text-slate-400">Village: {plotDetails.plot_info.village} | {plotDetails.plot_info.project}</p>
                   </div>
-                  <span className={`text-xs px-2.5 py-1 rounded font-semibold ${
-                    simResult ? "bg-emerald-100 text-emerald-800 border border-emerald-300" :
-                    isPlotLapsed ? "bg-red-100 text-red-700 border border-red-300 animate-pulse font-bold" :
-                    plotDetails.plot_info.risk_tier === "Critical" ? "bg-red-100 text-red-700 border border-red-300" :
-                    plotDetails.plot_info.risk_tier === "High" ? "bg-amber-100 text-amber-700 border border-amber-300" : "bg-emerald-100 text-emerald-700"
+                  <span className={`text-[11px] px-2 py-0.5 rounded font-semibold ${
+                    simResult ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40" :
+                    isPlotLapsed ? "bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse font-bold" :
+                    plotDetails.plot_info.risk_tier === "Critical" ? "bg-red-500/20 text-red-400 border border-red-500/40" :
+                    plotDetails.plot_info.risk_tier === "High" ? "bg-amber-500/20 text-amber-400 border border-amber-500/40" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
                   }`}>
                     {simResult ? "Simulated Tier" : isPlotLapsed ? "Statutorily Lapsed" : `${plotDetails.plot_info.risk_tier} Risk`}
                   </span>
@@ -489,60 +768,64 @@ export default function App() {
               </div>
 
               {/* Dynamic RFCTLARR Statutory Timeline & Pipeline Monitor */}
-              <StatutoryTimelineModule plotInfo={plotDetails.plot_info} />
+              <StatutoryTimelineModule plotInfo={plotDetails.plot_info} darkMode={darkMode} />
 
               {/* Predicted Delay Card with Legal Guardrail Override */}
               {isPlotLapsed ? (
-                <div className="bg-red-950 text-white p-3.5 rounded-lg border border-red-700 space-y-1 shadow-inner">
+                <div className="bg-red-950 text-white p-3 rounded-lg border border-red-700 space-y-1 shadow-inner">
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 text-red-400 text-xs font-bold uppercase tracking-wider">
-                      <AlertOctagon size={15} /> Statutory Proceeding Abated
+                      <AlertOctagon size={14} /> Statutory Proceeding Abated
                     </span>
                     <span className="text-[10px] bg-red-900/80 text-red-200 px-2 py-0.5 rounded font-mono font-bold">
                       Sec 19(7) VOID
                     </span>
                   </div>
-                  <p className="text-lg font-bold text-red-100 tracking-wide">
+                  <p className="text-base font-bold text-red-100 tracking-wide">
                     ACQUISITION LEGALLY VOID
                   </p>
                   <p className="text-[11px] text-red-300 leading-tight">
-                    Statutory 365-day threshold lapsed. Cannot calculate operational delay. Mandates fresh Section 11 Preliminary Notification.
+                    Statutory 365-day threshold lapsed. Operational delay calculation suspended. Mandates fresh Section 11 Preliminary Notification.
                   </p>
                 </div>
               ) : (
-                <div className="bg-slate-900 text-white p-3 rounded-lg flex items-center justify-between">
+                <div className="bg-slate-950/80 border border-slate-800 text-white p-2.5 rounded-lg flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-[11px] text-slate-400">
                       {simResult ? "Simulated Delay Projection" : "Predicted Lifecycle Delay"}
                     </p>
-                    <p className={`text-2xl font-bold ${simResult ? "text-emerald-400" : "text-amber-400"}`}>
+                    <p className={`text-xl font-bold ${simResult ? "text-emerald-400" : "text-amber-400"}`}>
                       {simResult ? simResult.new_predicted_delay_days : plotDetails.predicted_delay_days} Days
                     </p>
                   </div>
-                  <Clock className="text-slate-500" size={32} />
+                  <Clock className="text-slate-600" size={28} />
                 </div>
               )}
 
               {/* Explainable AI (SHAP Breakdown) */}
               <div>
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <div className="flex justify-between items-center mb-1.5">
+                  <h3 className={`text-[11px] font-bold uppercase tracking-wider ${
+                    darkMode ? "text-slate-300" : "text-slate-700"
+                  }`}>
                     Key Delay Drivers (TreeSHAP)
                   </h3>
                   {isPlotLapsed && (
-                    <span className="text-[10px] text-red-600 font-semibold bg-red-50 px-1.5 py-0.5 rounded border border-red-200">
+                    <span className="text-[9px] text-red-400 font-semibold bg-red-950/50 px-1.5 py-0.2 rounded border border-red-900">
                       Pre-Lapse Root Cause
                     </span>
                   )}
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {plotDetails.shap_breakdown.map((item, idx) => (
-                    <div key={idx} className="text-xs bg-slate-50 p-2 rounded border border-slate-200">
+                    <div key={idx} className={`text-xs p-2 rounded border ${
+                      darkMode ? "bg-slate-850 border-slate-800 text-slate-200" : "bg-slate-50 border-slate-200 text-slate-700"
+                    }`}>
                       <div className="flex justify-between font-medium mb-1">
-                        <span className="text-slate-700 capitalize">{item.factor.replace(/_/g, " ")}</span>
-                        <span className="text-red-600 font-bold">+{item.impact_days} days ({item.contribution_pct}%)</span>
+                        <span className="capitalize text-[11px]">{item.factor.replace(/_/g, " ")}</span>
+                        <span className="text-red-500 font-bold text-[11px]">+{item.impact_days}d ({item.contribution_pct}%)</span>
                       </div>
-                      <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                      <div className={`w-full h-1.5 rounded-full overflow-hidden ${darkMode ? "bg-slate-800" : "bg-slate-200"}`}>
                         <div className="bg-red-500 h-full" style={{ width: `${item.contribution_pct}%` }}></div>
                       </div>
                     </div>
@@ -551,71 +834,81 @@ export default function App() {
               </div>
 
               {/* Prescriptive Recommendation Card + Dynamic GenAI Ground Plan */}
-              <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg space-y-2">
+              <div className={`p-3 rounded-lg space-y-1.5 border ${
+                darkMode ? "bg-amber-950/20 border-amber-900/60 text-amber-200" : "bg-amber-50 border-amber-300 text-amber-900"
+              }`}>
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-amber-900 font-bold text-xs uppercase">
-                    <CheckCircle2 size={16} className="text-amber-600" /> Prescriptive Administrative Action
+                  <span className="flex items-center gap-1.5 font-bold text-[11px] uppercase">
+                    <CheckCircle2 size={14} className="text-amber-500" /> Prescriptive Administrative Action
                   </span>
-                  <span className="flex items-center gap-1 bg-amber-200/80 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300">
-                    <Sparkles size={11} className="text-amber-700" /> GenAI Ground Plan
+                  <span className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.2 rounded-full border ${
+                    darkMode ? "bg-amber-900/40 border-amber-700 text-amber-300" : "bg-amber-200/80 border-amber-300 text-amber-900"
+                  }`}>
+                    <Sparkles size={10} className="text-amber-500" /> GenAI Ground Plan
                   </span>
                 </div>
 
-                <p className="text-xs font-bold text-slate-900">
+                <p className={`text-xs font-bold leading-snug ${darkMode ? "text-slate-100" : "text-slate-900"}`}>
                   {isPlotLapsed ? "Initiate Emergency Re-Notification under Section 11(1)" : plotDetails.prescriptive_recommendation.action_title}
                 </p>
                 
                 {plotDetails.ai_mitigation_steps && plotDetails.ai_mitigation_steps.length > 0 ? (
-                  <div className="space-y-1.5 pt-1">
+                  <div className="space-y-1.5 pt-0.5">
                     {plotDetails.ai_mitigation_steps.map((step, idx) => (
-                      <div key={idx} className="text-[11px] text-slate-700 flex items-start gap-1.5 bg-white/90 p-2 rounded border border-amber-200 shadow-xs">
-                        <span className="font-bold text-amber-700 min-w-[14px]">{idx + 1}.</span>
+                      <div key={idx} className={`text-[11px] flex items-start gap-1.5 p-2 rounded border shadow-xs ${
+                        darkMode ? "bg-slate-800/80 border-slate-700 text-slate-200" : "bg-white/90 border-amber-200 text-slate-700"
+                      }`}>
+                        <span className="font-bold text-amber-500 min-w-[14px]">{idx + 1}.</span>
                         <span className="leading-tight">{step}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                     {plotDetails.prescriptive_recommendation.description}
                   </p>
                 )}
 
-                <div className="text-[11px] text-amber-900 font-medium pt-1">
+                <div className="text-[10px] font-medium pt-0.5 opacity-90">
                   Assigned To: <span className="font-bold">{plotDetails.prescriptive_recommendation.recommended_officer}</span>
                 </div>
 
                 <button
                   onClick={() => setShowNoticeModal(true)}
-                  className="mt-2 w-full flex items-center justify-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold py-2 px-3 rounded shadow-sm transition-colors"
+                  className="mt-1.5 w-full flex items-center justify-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold py-1.5 px-3 rounded shadow-sm transition-colors cursor-pointer"
                 >
-                  <FileText size={14} /> Generate Statutory Order / Notice Draft
+                  <FileText size={13} /> Generate Statutory Order / Notice Draft
                 </button>
               </div>
 
               {/* What-If Counterfactual Simulator */}
-              <div className="p-3 bg-slate-50 border border-slate-300 rounded-lg space-y-3">
+              <div className={`p-3 rounded-lg space-y-2.5 border ${
+                darkMode ? "bg-slate-800/80 border-slate-700" : "bg-slate-50 border-slate-300"
+              }`}>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs">
-                    <Sliders size={16} className="text-slate-600" /> "What-If" Mitigation Simulator
+                  <div className={`flex items-center gap-1.5 font-bold text-xs ${darkMode ? "text-slate-200" : "text-slate-800"}`}>
+                    <Sliders size={14} className={darkMode ? "text-slate-400" : "text-slate-600"} /> "What-If" Mitigation Simulator
                   </div>
                   {simResult && (
                     <button
                       onClick={resetSimulation}
-                      className="text-[10px] text-slate-500 hover:text-slate-800 flex items-center gap-1 underline"
+                      className="text-[10px] text-slate-400 hover:text-slate-200 flex items-center gap-1 underline cursor-pointer"
                     >
-                      <RotateCcw size={11} /> Reset
+                      <RotateCcw size={10} /> Reset
                     </button>
                   )}
                 </div>
 
                 {isPlotLapsed ? (
-                  <div className="p-2.5 bg-red-100/70 border border-red-200 rounded text-[11px] text-red-800">
-                    <strong>Simulation Disabled:</strong> This parcel has exceeded Section 19 statutory timeframes. Standard administrative interventions cannot reverse legal lapsing without re-notification.
+                  <div className={`p-2 rounded text-[11px] border ${
+                    darkMode ? "bg-red-950/40 border-red-900 text-red-300" : "bg-red-100/70 border-red-200 text-red-800"
+                  }`}>
+                    <strong>Simulation Disabled:</strong> Exceeded Section 19 statutory timeframes. Standard interventions cannot reverse legal lapsing without re-notification.
                   </div>
                 ) : (
                   <>
                     <div>
-                      <div className="flex justify-between text-xs mb-1">
+                      <div className="flex justify-between text-[11px] mb-1">
                         <span>Disbursement Target:</span>
                         <span className="font-bold">{simDisbursement}%</span>
                       </div>
@@ -625,12 +918,14 @@ export default function App() {
                         max="100"
                         value={simDisbursement}
                         onChange={(e) => setSimDisbursement(e.target.value)}
-                        className="w-full cursor-pointer"
+                        className={`w-full cursor-pointer h-1.5 rounded-lg appearance-none ${
+                          darkMode ? "bg-slate-700" : "bg-slate-200"
+                        }`}
                       />
                     </div>
 
                     <div className="space-y-1 text-xs">
-                      <label className="flex items-center gap-2">
+                      <label className="flex items-center gap-2 cursor-pointer text-[11px]">
                         <input
                           type="checkbox"
                           checked={!resolveKhata}
@@ -638,7 +933,7 @@ export default function App() {
                         />
                         Resolve Succession / Title Dispute
                       </label>
-                      <label className="flex items-center gap-2">
+                      <label className="flex items-center gap-2 cursor-pointer text-[11px]">
                         <input
                           type="checkbox"
                           checked={resolveForest}
@@ -650,20 +945,22 @@ export default function App() {
 
                     <button
                       onClick={runSimulation}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 rounded transition-colors"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-1.5 rounded transition-colors cursor-pointer"
                     >
                       Simulate Intervention
                     </button>
 
                     {simResult && (
-                      <div className="mt-2 p-2.5 bg-emerald-50 border border-emerald-300 rounded text-xs space-y-1">
-                        <div className="flex items-center justify-between font-bold text-emerald-800">
+                      <div className={`mt-1.5 p-2 rounded text-xs space-y-0.5 border ${
+                        darkMode ? "bg-emerald-950/40 border-emerald-900 text-emerald-300" : "bg-emerald-50 border-emerald-300 text-emerald-800"
+                      }`}>
+                        <div className="flex items-center justify-between font-bold text-[11px]">
                           <span>New Delay: {simResult.new_predicted_delay_days} Days</span>
-                          <span className="text-emerald-700 flex items-center">
-                            <TrendingDown size={14} className="mr-0.5" /> Saved: {simResult.days_saved} Days
+                          <span className="text-emerald-500 flex items-center">
+                            <TrendingDown size={13} className="mr-0.5" /> Saved: {simResult.days_saved}d
                           </span>
                         </div>
-                        <p className="text-[11px] text-emerald-700 font-medium">
+                        <p className="text-[10px] text-emerald-400 font-medium">
                           ✓ Map parcel recolored to indicate reduced risk status.
                         </p>
                       </div>
@@ -676,10 +973,10 @@ export default function App() {
         </div>
       </div>
 
-      {/* Official Government Notice / Memo Modal */}
+      {/* Official Government Notice / Memo Modal (Always White Paper Output for Print Clarity) */}
       {showNoticeModal && plotDetails && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full border border-slate-300 overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
+          <div className="bg-white text-slate-900 rounded-xl shadow-2xl max-w-2xl w-full border border-slate-300 overflow-hidden flex flex-col max-h-[90vh]">
             <div className="bg-slate-900 text-white px-6 py-3 flex justify-between items-center">
               <span className="text-xs uppercase tracking-wider font-semibold text-amber-400 flex items-center gap-1.5">
                 <FileText size={16} /> Automated Administrative Order Draft
@@ -687,37 +984,37 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => window.print()}
-                  className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-2.5 py-1 rounded flex items-center gap-1 border border-slate-700"
+                  className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-2.5 py-1 rounded flex items-center gap-1 border border-slate-700 cursor-pointer"
                 >
                   <Printer size={13} /> Print Memo
                 </button>
                 <button
                   onClick={() => setShowNoticeModal(false)}
-                  className="text-slate-400 hover:text-white"
+                  className="text-slate-400 hover:text-white cursor-pointer"
                 >
                   <X size={18} />
                 </button>
               </div>
             </div>
 
-            <div className="p-8 overflow-y-auto space-y-4 text-slate-800 font-serif text-sm leading-relaxed">
+            <div className="p-8 overflow-y-auto space-y-4 font-serif text-sm leading-relaxed">
               <div className="text-center border-b border-slate-300 pb-3">
-                <h3 className="font-bold text-base tracking-wide uppercase">Office of the Competent Authority for Land Acquisition (CALA)</h3>
+                <h3 className="font-bold text-base tracking-wide uppercase text-slate-900">Office of the Competent Authority for Land Acquisition (CALA)</h3>
                 <p className="text-xs font-sans text-slate-500">Government of Haryana / Revenue & Disaster Management Department</p>
                 <p className="text-[11px] font-sans text-slate-400 mt-0.5">Under Right to Fair Compensation and Transparency in Land Acquisition (RFCTLARR) Act, 2013</p>
               </div>
 
-              <div className="flex justify-between font-sans text-xs pt-1">
+              <div className="flex justify-between font-sans text-xs pt-1 text-slate-600">
                 <span><strong>Order Ref:</strong> CALA/REV/{plotDetails.plot_info.khasra_no.replace('/', '-')}/2026</span>
                 <span><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</span>
               </div>
 
-              <div className="font-sans text-xs bg-slate-50 p-2.5 rounded border border-slate-200">
+              <div className="font-sans text-xs bg-slate-50 p-2.5 rounded border border-slate-200 text-slate-800">
                 <p><strong>To:</strong> {plotDetails.prescriptive_recommendation.recommended_officer}</p>
                 <p><strong>Subject:</strong> Immediate statutory direction regarding Khasra No. <strong>{plotDetails.plot_info.khasra_no}</strong>, Village {plotDetails.plot_info.village} ({plotDetails.plot_info.project}).</p>
               </div>
 
-              <p>
+              <p className="text-slate-800">
                 Whereas, land acquisition proceedings are actively underway for the National Corridor Project under the RFCTLARR Act, 2013. The statutory monitoring engine has flagged parcel <strong>{plotDetails.plot_info.khasra_no}</strong> as critical, having only <strong>{plotDetails.plot_info.statutory_days_left} days</strong> remaining prior to statutory lapsing.
               </p>
 
@@ -734,7 +1031,7 @@ export default function App() {
                 )}
               </div>
 
-              <p>
+              <p className="text-slate-800">
                 You are hereby directed to execute <strong>{plotDetails.prescriptive_recommendation.action_title}</strong> within 7 working days from the issuance of this order. Failure to comply may result in statutory lapsing under Section 19(7) / 25 of the Act, causing substantial public exchequer loss.
               </p>
 
