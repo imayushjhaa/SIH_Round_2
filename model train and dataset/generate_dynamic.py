@@ -2,15 +2,19 @@ import joblib
 import pandas as pd
 import shap
 import xgboost as xgb
-from prompt_pipeline import build_recommendation_prompt
+from pathlib import Path
+from prompt_pipeline import generate_dynamic_mitigation_steps
 
-# 1. Load trained ML model artifacts
-model = joblib.load("risk_model.pkl")
-feature_names = joblib.load("model_features.pkl")
+# Base directory for this file
+BASE_DIR = Path(__file__).resolve().parent
+
+# 1. Load trained ML model artifacts using secure absolute paths
+model = joblib.load(BASE_DIR / "risk_model.pkl")
+feature_names = joblib.load(BASE_DIR / "model_features.pkl")
 explainer = shap.TreeExplainer(model)
 
 
-def evaluate_project_dict(project_dict: dict) -> str:
+def evaluate_project_dict(project_dict: dict) -> list:
     df_input = pd.DataFrame([project_dict])
 
     # Compute financial gap ratio feature
@@ -59,23 +63,37 @@ def evaluate_project_dict(project_dict: dict) -> str:
         )
 
         drivers.append({
-            "feature": clean_name,
-            "shap_impact": round(float(impact), 2),
-            "raw_impact": float(impact),
+            "factor": clean_name,
+            "impact_days": round(float(impact), 2),
+            "contribution_pct": round(float(impact), 1),
             "feature_value": val,
         })
 
-    sorted_drivers = sorted(drivers, key=lambda x: abs(x["raw_impact"]), reverse=True)[:5]
+    sorted_drivers = sorted(drivers, key=lambda x: abs(x["impact_days"]), reverse=True)[:5]
     project_name = project_dict.get("project_name", "Selected Project")
+    khasra_no = project_dict.get("khasra_no", "KH-000")
 
-    return build_recommendation_prompt(project_name, risk_score, base_value, sorted_drivers)
+    fallback_action = {
+        "category": project_dict.get("category", "General Review"),
+        "action_title": "Expedite Statutory Clearance"
+    }
+
+    return generate_dynamic_mitigation_steps(
+        khasra_no=khasra_no,
+        project_name=project_name,
+        delay_days=int(risk_score),
+        shap_drivers=sorted_drivers,
+        fallback_action=fallback_action
+    )
 
 
-def run_interactive_csv_selector(csv_path: str = "land_acquisition_data.csv"):
+def run_interactive_csv_selector(csv_path: str = None):
+    if csv_path is None:
+        csv_path = BASE_DIR / "land_acquisition_data.csv"
     try:
         df = pd.read_csv(csv_path)
     except FileNotFoundError:
-        print(f"Error: Could not locate '{csv_path}' in current directory.")
+        print(f"Error: Could not locate '{csv_path}'.")
         return
 
     total_rows = len(df)
@@ -108,7 +126,7 @@ def run_interactive_csv_selector(csv_path: str = "land_acquisition_data.csv"):
     else:
         print(f"\nFound {len(matches)} matching projects:")
         for idx, row in matches.head(10).iterrows():
-            print(f"  [{idx}] {row.get('project_name', f'Project #{idx}')} | State: {row.get('state', 'N/A')}")
+            print(f"   [{idx}] {row.get('project_name', f'Project #{idx}')} | State: {row.get('state', 'N/A')}")
 
         choice = input("\nEnter Row Index from list above: ").strip()
         if choice.isdigit() and int(choice) in matches.index:
@@ -118,7 +136,7 @@ def run_interactive_csv_selector(csv_path: str = "land_acquisition_data.csv"):
 def _display_analysis(index: int, project_dict: dict):
     project_label = project_dict.get("project_name", f"Project Row #{index}")
     print("\n" + "=" * 65)
-    print(f"  GENERATING RISK ANALYSIS FOR ROW [{index}]: {project_label}")
+    print(f"   GENERATING RISK ANALYSIS FOR ROW [{index}]: {project_label}")
     print("=" * 65 + "\n")
     print(evaluate_project_dict(project_dict))
 
