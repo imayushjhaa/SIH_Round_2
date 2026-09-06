@@ -19,7 +19,7 @@ def generate_dynamic_mitigation_steps(
         return [
             f"De-Novo Section 11 Notification: Direct Competent Authority (CALA) to issue fresh preliminary notification for {khasra_no} following statutory abatement.",
             "Re-conduct Social Impact Assessment (SIA): Request expeditious waiver/fast-track SIA update from State Revenue Department citing infrastructure continuity.",
-            "Alignment Priority Freeze: Direct Project Director ({project_name}) to maintain freeze on contiguous stretch alignment to avoid corridor redesign."
+            f"Alignment Priority Freeze: Direct Project Director ({project_name}) to maintain freeze on contiguous stretch alignment to avoid corridor redesign."
         ]
 
     if not shap_drivers:
@@ -97,3 +97,14 @@ def generate_dynamic_mitigation_steps(
         )
 
     return steps
+
+
+# Backward compatibility alias for generate_dynamic.py imports
+def build_recommendation_prompt(
+    khasra_no: str, 
+    project_name: str, 
+    delay_days: int, 
+    shap_drivers: list, 
+    fallback_action: dict
+) -> list:
+    return generate_dynamic_mitigation_steps(khasra_no, project_name, delay_days, shap_drivers, fallback_action)
