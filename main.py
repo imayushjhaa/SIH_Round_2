@@ -152,36 +152,44 @@ def get_plot_details(khasra_no: str):
     plot = dict(raw_plots[khasra_no])
     predicted_delay = float(plot.get("delay_days", 45))
 
+    # Calculate exact proportional weights summing up to total predicted_delay
+    w1 = 0.45 if plot.get("court_stay", 0) == 1 else 0.25
+    w2 = 0.35 if plot.get("unpartitioned_khata", 0) == 1 else 0.40
+    w3 = 0.20 if plot.get("forest_clearance", "Approved") == "Pending" else 0.35
+    
+    total_w = w1 + w2 + w3
+
+    factor1_name = "Pending Litigation & Court Stay" if plot.get("court_stay", 0) == 1 else "Lower Court Verification"
+    factor2_name = "Unpartitioned Khata / Successors Gridlock" if plot.get("unpartitioned_khata", 0) == 1 else "Mutation & Title Cleared"
+    factor3_name = "Stage-II Forest Clearance Pending" if plot.get("forest_clearance", "Approved") == "Pending" else "Environmental & Forest Compliance"
+
+    raw_impacts = [
+        {"factor": factor1_name, "weight": w1},
+        {"factor": factor2_name, "weight": w2},
+        {"factor": factor3_name, "weight": w3}
+    ]
+
+    # Sort by weight descending
+    raw_impacts = sorted(raw_impacts, key=lambda x: x["weight"], reverse=True)[:3]
+
     impacts = []
-    
-    if plot.get("court_stay", 0) == 1:
-        lit_days = round(predicted_delay * 0.45, 1)
-        impacts.append({"factor": "Pending Litigation & Court Stay", "impact_days": lit_days})
-    else:
-        lit_days = round(predicted_delay * 0.15, 1)
-        impacts.append({"factor": "Lower Court Verification", "impact_days": lit_days})
+    sum_assigned = 0.0
+    for idx, item in enumerate(raw_impacts):
+        if idx == len(raw_impacts) - 1:
+            # Assign remaining exact difference to the last element to prevent rounding mismatches
+            days = round(predicted_delay - sum_assigned, 1)
+        else:
+            days = round(predicted_delay * (item["weight"] / total_w), 1)
+            sum_assigned += days
+            
+        pct = round((days / predicted_delay) * 100, 1) if predicted_delay > 0 else 0.0
+        impacts.append({
+            "factor": item["factor"],
+            "impact_days": max(0.0, days),
+            "contribution_pct": max(0.0, pct)
+        })
 
-    if plot.get("unpartitioned_khata", 0) == 1:
-        khata_days = round(predicted_delay * 0.35, 1)
-        impacts.append({"factor": "Unpartitioned Khata / Successors Gridlock", "impact_days": khata_days})
-    else:
-        khata_days = round(predicted_delay * 0.20, 1)
-        impacts.append({"factor": "Mutation & Title Cleared", "impact_days": khata_days})
-
-    if plot.get("forest_clearance", "Approved") == "Pending":
-        forest_days = round(predicted_delay * 0.30, 1)
-        impacts.append({"factor": "Stage-II Forest Clearance Pending", "impact_days": forest_days})
-    else:
-        forest_days = round(predicted_delay * 0.15, 1)
-        impacts.append({"factor": "Environmental & Forest Compliance", "impact_days": forest_days})
-
-    impacts = sorted(impacts, key=lambda x: x["impact_days"], reverse=True)[:3]
-    
-    total_imp = sum(x["impact_days"] for x in impacts) or 1.0
-    for imp in impacts:
-        imp["contribution_pct"] = round((imp["impact_days"] / total_imp) * 100, 1)
-
-    top_factor = impacts[0]["factor"] if impacts else "court_stay"
+    top_factor = "court_stay" if plot.get("court_stay", 0) == 1 else "unpartitioned_khata"
     prescriptive_action = get_prescriptive_action(top_factor, plot)
 
     ai_steps = generate_dynamic_mitigation_steps(
