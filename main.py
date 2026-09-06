@@ -150,16 +150,38 @@ def get_plot_details(khasra_no: str):
         raise HTTPException(status_code=404, detail="Plot not found")
 
     plot = dict(raw_plots[khasra_no])
-
     predicted_delay = float(plot.get("delay_days", 45))
 
-    impacts = [
-        {"factor": "Compensation Gap Ratio", "impact_days": round(predicted_delay * 0.45, 1), "contribution_pct": 45.0},
-        {"factor": "Pending Litigation Cases", "impact_days": round(predicted_delay * 0.35, 1), "contribution_pct": 35.0},
-        {"factor": "Forest Clearance Delay", "impact_days": round(predicted_delay * 0.20, 1), "contribution_pct": 20.0}
-    ]
+    impacts = []
+    
+    if plot.get("court_stay", 0) == 1:
+        lit_days = round(predicted_delay * 0.45, 1)
+        impacts.append({"factor": "Pending Litigation & Court Stay", "impact_days": lit_days})
+    else:
+        lit_days = round(predicted_delay * 0.15, 1)
+        impacts.append({"factor": "Lower Court Verification", "impact_days": lit_days})
 
-    top_factor = "court_stay" if plot.get("court_stay", 0) == 1 else "unpartitioned_khata"
+    if plot.get("unpartitioned_khata", 0) == 1:
+        khata_days = round(predicted_delay * 0.35, 1)
+        impacts.append({"factor": "Unpartitioned Khata / Successors Gridlock", "impact_days": khata_days})
+    else:
+        khata_days = round(predicted_delay * 0.20, 1)
+        impacts.append({"factor": "Mutation & Title Cleared", "impact_days": khata_days})
+
+    if plot.get("forest_clearance", "Approved") == "Pending":
+        forest_days = round(predicted_delay * 0.30, 1)
+        impacts.append({"factor": "Stage-II Forest Clearance Pending", "impact_days": forest_days})
+    else:
+        forest_days = round(predicted_delay * 0.15, 1)
+        impacts.append({"factor": "Environmental & Forest Compliance", "impact_days": forest_days})
+
+    impacts = sorted(impacts, key=lambda x: x["impact_days"], reverse=True)[:3]
+    
+    total_imp = sum(x["impact_days"] for x in impacts) or 1.0
+    for imp in impacts:
+        imp["contribution_pct"] = round((imp["impact_days"] / total_imp) * 100, 1)
+
+    top_factor = impacts[0]["factor"] if impacts else "court_stay"
     prescriptive_action = get_prescriptive_action(top_factor, plot)
 
     ai_steps = generate_dynamic_mitigation_steps(
