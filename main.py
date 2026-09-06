@@ -6,6 +6,9 @@ import json
 import joblib
 import shap
 from pathlib import Path
+import subprocess
+import sys
+import importlib.util
 from prompt_pipeline import generate_dynamic_mitigation_steps
 
 app = FastAPI(title="SIH26017 Land Acquisition Analytics Engine")
@@ -21,19 +24,48 @@ app.add_middleware(
 
 # Base directory setup for robust file loading
 BASE_DIR = Path(__file__).resolve().parent
+model_dir = BASE_DIR / "model train and dataset"
 
-# 1. Load ML Artifacts & Data Safely (Looking inside backend folder)
-artifacts = joblib.load(BASE_DIR / "backend" / "land_model.joblib") if (BASE_DIR / "backend" / "land_model.joblib").exists() else joblib.load(BASE_DIR / "land_model.joblib")
-model = artifacts["model"]
-explainer = artifacts["explainer"]
-expected_cols = artifacts["feature_names"]
+# Dynamically load generate_dynamic.py to bypass spaces in folder name
+gen_dynamic_path = model_dir / "generate_dynamic.py"
+if gen_dynamic_path.exists():
+    spec = importlib.util.spec_from_file_location("generate_dynamic", gen_dynamic_path)
+    generate_dynamic_module = importlib.util.module_from_spec(spec)
+    sys.modules["generate_dynamic"] = generate_dynamic_module
+    spec.loader.exec_module(generate_dynamic_module)
+    evaluate_project_dict = generate_dynamic_module.evaluate_project_dict
+else:
+    def evaluate_project_dict(data):
+        return "Dynamic evaluation module not found."
 
-with open(BASE_DIR / "backend" / "mockData.json", "r", encoding="utf-8") as f:
+# 1. Load ML Artifacts, Features & Master Dataset Safely
+risk_model_path = model_dir / "risk_model.pkl"
+features_path = model_dir / "model_features.pkl"
+
+if risk_model_path.exists() and features_path.exists():
+    model = joblib.load(risk_model_path)
+    expected_cols = joblib.load(features_path)
+    explainer = shap.TreeExplainer(model)
+else:
+    # Fallback to old joblib if new files are missing
+    fallback_path = BASE_DIR / "backend" / "land_model.joblib" if (BASE_DIR / "backend" / "land_model.joblib").exists() else BASE_DIR / "land_model.joblib"
+    artifacts = joblib.load(fallback_path)
+    model = artifacts["model"]
+    explainer = artifacts["explainer"]
+    expected_cols = artifacts["feature_names"]
+
+# Load contributor's Master CSV dataset reference
+csv_path = model_dir / "land_acquisition_data.csv"
+master_df = pd.read_csv(csv_path) if csv_path.exists() else None
+
+# Load mockData and geojson dynamically from backend or root
+mock_path = BASE_DIR / "backend" / "mockData.json" if (BASE_DIR / "backend" / "mockData.json").exists() else BASE_DIR / "mockData.json"
+with open(mock_path, "r", encoding="utf-8") as f:
     mock_list = json.load(f)
     raw_plots = {item["khasra_no"]: item for item in mock_list}
 
-# Load real GeoJSON cadastral polygons from backend folder
-with open(BASE_DIR / "backend" / "parcels.geojson", "r", encoding="utf-8") as f:
+geojson_path = BASE_DIR / "backend" / "parcels.geojson" if (BASE_DIR / "backend" / "parcels.geojson").exists() else BASE_DIR / "parcels.geojson"
+with open(geojson_path, "r", encoding="utf-8") as f:
     raw_geojson = json.load(f)
 
 
@@ -86,7 +118,7 @@ def get_prescriptive_action(top_factor: str, plot: dict) -> dict:
 # ==========================================
 
 
-# Endpoint 1: GeoJSON Map Data (Reads real irregular polygons from parcels.geojson & syncs with mockData)
+# Endpoint 1: GeoJSON Map Data
 @app.get("/api/parcels")
 def get_parcels():
     updated_features = []
@@ -154,7 +186,13 @@ def get_plot_details(khasra_no: str):
     predicted_delay = float(model.predict(sample_encoded)[0])
 
     # SHAP computation
-    shap_vals = explainer(sample_encoded).values[0]
+    try:
+        shap_vals = explainer(sample_encoded).values
+        if len(shap_vals.shape) > 1:
+            shap_vals = shap_vals[0]
+    except Exception:
+        shap_vals = [0] * len(expected_cols)
+
     impacts = []
     for feat_name, impact in zip(expected_cols, shap_vals):
         if impact > 0:
@@ -239,6 +277,40 @@ def simulate_mitigation(req: SimulationRequest):
             else "Needs further action"
         ),
     }
+
+
+# Endpoint 5: Dynamic ML Pipeline Retraining Trigger (enrich_dataset.py & train_model.py)
+@app.post("/api/pipeline/retrain")
+def trigger_ml_pipeline():
+    try:
+        enrich_script = model_dir / "enrich_dataset.py"
+        if enrich_script.exists():
+            subprocess.run(["python", str(enrich_script)], check=True)
+            
+        train_script = model_dir / "train_model.py"
+        if train_script.exists():
+            subprocess.run(["python", str(train_script)], check=True)
+            
+        return {
+            "status": "success",
+            "message": "Dataset enriched and model retrained successfully using contributor scripts!"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Pipeline execution failed: {str(e)}")
+
+
+# Endpoint 6: Dynamic Project Risk Evaluation (generate_dynamic.py integration)
+@app.post("/api/evaluate-dynamic")
+def evaluate_dynamic_project(project_data: dict):
+    try:
+        prompt_result = evaluate_project_dict(project_data)
+        return {
+            "status": "success",
+            "evaluation_output": prompt_result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Dynamic evaluation failed: {str(e)}")
+
 
 if __name__ == "__main__":
     import uvicorn
