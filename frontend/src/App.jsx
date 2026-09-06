@@ -25,7 +25,6 @@ import {
 
 const BACKEND_URL = "http://127.0.0.1:8000";
 
-// RFCTLARR 2013 5-Stage Statutory Pipeline Definition
 const STATUTORY_STAGES = [
   { id: "sec11", label: "Sec 11", full: "Section 11 (Notice)", window: "Day 0" },
   { id: "sec15", label: "Sec 15", full: "Section 15 (Hearing)", window: "60 Days" },
@@ -34,14 +33,12 @@ const STATUTORY_STAGES = [
   { id: "possession", label: "Possession", full: "Physical Possession", window: "Post-Award" },
 ];
 
-// Helper: Format ISO Date into Clean Reading Format
 const formatLegalDate = (dateStr) => {
   if (!dateStr) return "N/A";
   const d = new Date(dateStr);
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 };
 
-// Helper: Calculate Statutory Expiration (Sec 11 Date + 365 Days)
 const calculateSec19Deadline = (sec11DateStr) => {
   if (!sec11DateStr) return "N/A";
   const d = new Date(sec11DateStr);
@@ -49,12 +46,10 @@ const calculateSec19Deadline = (sec11DateStr) => {
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 };
 
-// Sub-component: Smooth Fly-To & Zoom Controller for Selected Plot or Initial Bounds
 function MapController({ selectedPlot, geoData }) {
   const map = useMap();
   const hasInitializedBounds = useRef(false);
 
-  // Auto-fit bounds to all parcels on initial load so they are dead-center
   useEffect(() => {
     if (!geoData?.features || hasInitializedBounds.current) return;
     try {
@@ -62,7 +57,7 @@ function MapController({ selectedPlot, geoData }) {
       geoData.features.forEach((feature) => {
         if (feature?.geometry?.coordinates) {
           const coords = feature.geometry.coordinates[0];
-          coords.forEach((c) => allCoords.push([c[1], c[0]])); // [lat, lng]
+          coords.forEach((c) => allCoords.push([c[1], c[0]]));
         }
       });
       if (allCoords.length > 0) {
@@ -80,7 +75,6 @@ function MapController({ selectedPlot, geoData }) {
     }
   }, [geoData, map]);
 
-  // Fly to selected plot when clicked
   useEffect(() => {
     if (!selectedPlot || !geoData?.features) return;
     const feature = geoData.features.find(
@@ -101,7 +95,6 @@ function MapController({ selectedPlot, geoData }) {
   return null;
 }
 
-// Sub-component: RFCTLARR Statutory Pipeline & Timeline Monitor
 function StatutoryTimelineModule({ plotInfo }) {
   const getStageIndex = (stageName) => {
     if (!stageName) return 0;
@@ -130,7 +123,6 @@ function StatutoryTimelineModule({ plotInfo }) {
         </span>
       </div>
 
-      {/* 5-Stage Stepper Track */}
       <div className="relative flex items-center justify-between pt-0.5 pb-0.5">
         <div className="absolute top-[12px] left-3 right-3 h-0.5 z-0 bg-slate-200"></div>
         <div 
@@ -174,7 +166,6 @@ function StatutoryTimelineModule({ plotInfo }) {
         })}
       </div>
 
-      {/* Statutory Timeline Details & Expiry Card */}
       <div className={`p-2 rounded border text-xs space-y-1 ${
         isLapsed 
           ? "bg-red-50/80 border-red-300 text-red-900"
@@ -217,7 +208,6 @@ function StatutoryTimelineModule({ plotInfo }) {
   );
 }
 
-// Sub-component: Reset Map View Button Handler inside MapContainer
 function ResetViewButton({ geoData }) {
   const map = useMap();
   const resetView = () => {
@@ -265,17 +255,14 @@ export default function App() {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [showNoticeModal, setShowNoticeModal] = useState(false);
 
-  // Search & Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("ALL");
 
-  // What-If Simulation State
   const [simDisbursement, setSimDisbursement] = useState(50);
   const [resolveKhata, setResolveKhata] = useState(false);
   const [resolveForest, setResolveForest] = useState(false);
   const [simResult, setSimResult] = useState(null);
 
-  // Resizable Split Pane State (Map width percentage, default 65%)
   const [mapWidth, setMapWidth] = useState(65);
   const containerRef = useRef(null);
   const isDraggingRef = useRef(false);
@@ -290,7 +277,6 @@ export default function App() {
       .catch(err => console.error("GeoJSON error:", err));
   }, []);
 
-  // Mouse drag handlers with strict minimum width constraint for right details panel (~440px)
   const handleMouseDown = (e) => {
     e.preventDefault();
     isDraggingRef.current = true;
@@ -304,13 +290,11 @@ export default function App() {
     const totalWidth = containerRect.width;
     const mouseX = e.clientX - containerRect.left;
     
-    // Minimum width for right details tab is 440px
     const minRightWidth = 440;
     const maxMapAllowedWidth = totalWidth - minRightWidth;
     
     let newMapWidthPercent = (mouseX / totalWidth) * 100;
     
-    // Restrict map width so details tab never shrinks below 440px, and map stays at least 30%
     if (newMapWidthPercent < 30) newMapWidthPercent = 30;
     const maxAllowedPercent = (maxMapAllowedWidth / totalWidth) * 100;
     if (newMapWidthPercent > maxAllowedPercent) {
@@ -331,7 +315,7 @@ export default function App() {
     setLoadingDetails(true);
     setSimResult(null);
 
-    axios.get(`${BACKEND_URL}/api/plot/${encodeURIComponent(khasraNo)}`)
+    axios.get(`${BACKEND_URL}/api/plot?khasra_no=${encodeURIComponent(khasraNo)}`)
       .then(res => {
         setPlotDetails(res.data);
         setSimDisbursement(res.data.plot_info.disbursement_pct);
@@ -353,7 +337,6 @@ export default function App() {
     }
   };
 
-  // Executive CSV Dossier Generator
   const exportLapsingDossierCSV = () => {
     if (!geoData?.features) return;
 
@@ -503,7 +486,6 @@ export default function App() {
   return (
     <div className="flex flex-col h-screen font-sans bg-slate-100 text-slate-800 selection:bg-amber-200">
       
-      {/* Hidden Global SVG Defs for Canvas Fill Patterns */}
       <svg className="absolute w-0 h-0 pointer-events-none" aria-hidden="true">
         <defs>
           <pattern
@@ -519,7 +501,6 @@ export default function App() {
         </defs>
       </svg>
 
-      {/* Global CSS for Leaflet Controls */}
       <style>{`
         path.leaflet-interactive:focus,
         path.leaflet-interactive:focus-visible,
@@ -555,7 +536,6 @@ export default function App() {
         }
       `}</style>
 
-      {/* Compact Top Header */}
       <header className="bg-slate-900 text-white px-5 py-2.5 flex justify-between items-center shadow-md border-b border-slate-800">
         <div className="flex items-center gap-3">
           <div className="p-1.5 bg-amber-400/10 border border-amber-400/20 rounded-lg">
@@ -586,10 +566,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* 5-Column Executive KPI Strip */}
       <div className="grid grid-cols-5 gap-2.5 px-5 py-2 border-b bg-white border-slate-200">
-        
-        {/* Metric 1: Total Parcels */}
         <div 
           onClick={() => setActiveFilter("ALL")}
           title="Click to view all corridor parcels"
@@ -611,7 +588,6 @@ export default function App() {
           <p className="text-lg font-extrabold text-slate-800">{summary?.total_parcels ?? "--"}</p>
         </div>
 
-        {/* Metric 2: Section 19 Lapse Alert */}
         <div 
           onClick={() => setActiveFilter(activeFilter === "LAPSE" ? "ALL" : "LAPSE")}
           title="Click to isolate statutory critical and lapsed parcels (<45d)"
@@ -637,7 +613,6 @@ export default function App() {
           <p className="text-lg font-extrabold text-red-600">{summary?.critical_lapsing_parcels ?? "--"}</p>
         </div>
 
-        {/* Metric 3: High Delay Risk */}
         <div 
           onClick={() => setActiveFilter(activeFilter === "HIGH_RISK" ? "ALL" : "HIGH_RISK")}
           title="Click to filter all operational delay parcels (>90 days)"
@@ -659,7 +634,6 @@ export default function App() {
           <p className="text-lg font-extrabold text-amber-600">{summary?.high_risk_parcels ?? "--"}</p>
         </div>
 
-        {/* Metric 4: Safe / Cleared Parcels */}
         <div 
           onClick={() => setActiveFilter(activeFilter === "SAFE" ? "ALL" : "SAFE")}
           title="Click to isolate safe parcels on track without active dispute"
@@ -683,7 +657,6 @@ export default function App() {
           <p className="text-lg font-extrabold text-emerald-600">{safeCount}</p>
         </div>
 
-        {/* Metric 5: Avg Disbursement Velocity */}
         <div 
           title="RFCTLARR Sec 38 Mandate: Minimum 80% compensation required before physical possession"
           className="flex items-center justify-between px-3 py-1.5 rounded-lg select-none bg-slate-50 border border-slate-200"
@@ -697,18 +670,13 @@ export default function App() {
           </div>
           <p className="text-lg font-extrabold text-slate-800">{summary?.avg_disbursement_pct ?? "--"}%</p>
         </div>
-
       </div>
 
-      {/* Main Workspace with Resizable Split Pane */}
       <div ref={containerRef} className="flex flex-1 overflow-hidden p-3 gap-0 relative">
-        
-        {/* Left Side: Cadastral Satellite Map (Width controlled by mapWidth state) */}
         <div 
           className="h-full relative rounded-l-xl overflow-hidden shadow-md border border-slate-300"
           style={{ width: `${mapWidth}%` }}
         >
-          {/* Top-Left: Search Bar */}
           <div className="absolute top-3 left-3 z-[1000]">
             <form onSubmit={handleSearchSubmit} className="relative">
               <input
@@ -722,7 +690,6 @@ export default function App() {
             </form>
           </div>
 
-          {/* Bottom-Left: Map Legend */}
           <div className="absolute bottom-3 left-3 z-[1000] bg-slate-900/90 text-white px-3 py-1.5 rounded-lg shadow-xl border border-slate-700 text-xs flex items-center gap-3 backdrop-blur-md">
             <span className="flex items-center gap-1.5 font-medium">
               <span className="w-2.5 h-2.5 bg-emerald-500 rounded-xs inline-block"></span> Safe
@@ -781,7 +748,6 @@ export default function App() {
           )}
         </div>
 
-        {/* Draggable Vertical Slider / Divider Bar */}
         <div
           onMouseDown={handleMouseDown}
           className="w-2 bg-slate-300 hover:bg-sky-500 active:bg-sky-600 cursor-col-resize transition-colors flex items-center justify-center z-20 group relative shadow-inner"
@@ -790,7 +756,6 @@ export default function App() {
           <div className="w-1 h-8 bg-slate-400 group-hover:bg-white rounded-full"></div>
         </div>
 
-        {/* Right Side: Analytical & Prescriptive Drawer (Width takes remaining percentage, with strict min-width ~440px) */}
         <div 
           className="h-full overflow-y-auto p-4 rounded-r-xl shadow-md border border-slate-300 bg-white text-slate-800 space-y-3.5 min-w-[440px]"
           style={{ width: `${100 - mapWidth}%` }}
@@ -805,7 +770,6 @@ export default function App() {
             <p className="text-xs text-slate-500">Evaluating statutory compliance & running SHAP models...</p>
           ) : plotDetails && (
             <>
-              {/* Parcel Header */}
               <div className="border-b pb-2.5 border-slate-200">
                 <div className="flex justify-between items-start">
                   <div>
@@ -823,10 +787,8 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Dynamic RFCTLARR Statutory Timeline & Pipeline Monitor */}
               <StatutoryTimelineModule plotInfo={plotDetails.plot_info} />
 
-              {/* Predicted Delay Card with Legal Guardrail Override */}
               {isPlotLapsed ? (
                 <div className="bg-red-900 text-white p-3 rounded-lg border border-red-700 space-y-1 shadow-inner">
                   <div className="flex items-center justify-between">
@@ -858,7 +820,6 @@ export default function App() {
                 </div>
               )}
 
-              {/* Explainable AI (SHAP Breakdown) */}
               <div>
                 <div className="flex justify-between items-center mb-1.5">
                   <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-700">
@@ -885,7 +846,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Prescriptive Recommendation Card + Dynamic GenAI Ground Plan */}
               <div className="p-3 rounded-lg space-y-1.5 border bg-amber-50 border-amber-300 text-amber-900">
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1.5 font-bold text-[11px] uppercase">
@@ -927,7 +887,6 @@ export default function App() {
                 </button>
               </div>
 
-              {/* What-If Counterfactual Simulator */}
               <div className="p-3 rounded-lg space-y-2.5 border bg-slate-50 border-slate-300">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 font-bold text-xs text-slate-800">
@@ -1016,7 +975,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Official Government Notice / Memo Modal */}
       {showNoticeModal && plotDetails && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
           <div className="bg-white text-slate-900 rounded-xl shadow-2xl max-w-2xl w-full border border-slate-300 overflow-hidden flex flex-col max-h-[90vh]">
