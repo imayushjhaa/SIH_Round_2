@@ -6,6 +6,7 @@ import json
 import copy
 import joblib
 import shap
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -14,12 +15,21 @@ from prompt_pipeline import generate_dynamic_mitigation_steps
 
 app = FastAPI(title="SIH26017 Land Acquisition Analytics Engine")
 
+# Dynamic CORS origins - supports both development and production
+allowed_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
+
+# Add production origins from environment variable
+if os.getenv("FRONTEND_URL"):
+    allowed_origins.append(os.getenv("FRONTEND_URL"))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000",
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -211,7 +221,7 @@ def get_summary():
     }
 
 
-@app.get("/api/plot")
+@app.get("/api/plot/{khasra_no:path}")
 def get_plot_details(khasra_no: str):
     if model is None or explainer is None:
         raise HTTPException(status_code=503, detail="ML model not loaded. Run train_model.py first.")
