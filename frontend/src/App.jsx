@@ -315,7 +315,7 @@ export default function App() {
     setLoadingDetails(true);
     setSimResult(null);
 
-    axios.get(`${BACKEND_URL}/api/plot?khasra_no=${encodeURIComponent(khasraNo)}`)
+    axios.get(`${BACKEND_URL}/api/plot/${encodeURIComponent(khasraNo)}`)
       .then(res => {
         setPlotDetails(res.data);
         setSimDisbursement(res.data.plot_info.disbursement_pct);
