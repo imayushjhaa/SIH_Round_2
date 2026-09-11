@@ -930,20 +930,32 @@ export default function App() {
                       <label className="flex items-center gap-2 cursor-pointer text-[11px]">
                         <input
                           type="checkbox"
-                          checked={!resolveKhata}
-                          onChange={(e) => setResolveKhata(!e.target.checked)}
+                          checked={resolveKhata}
+                          onChange={(e) => setResolveKhata(e.target.checked)}
+                          disabled={plotDetails?.plot_info?.unpartitioned_khata === 0}
                           className="accent-blue-600"
                         />
-                        Resolve Succession / Title Dispute
+                        <span>
+                          Resolve Succession / Title Dispute
+                          {plotDetails?.plot_info?.unpartitioned_khata === 0 && (
+                            <span className="text-[9px] text-emerald-600 ml-1">(Already Cleared)</span>
+                          )}
+                        </span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer text-[11px]">
                         <input
                           type="checkbox"
                           checked={resolveForest}
                           onChange={(e) => setResolveForest(e.target.checked)}
+                          disabled={plotDetails?.plot_info?.forest_clearance === "Approved"}
                           className="accent-blue-600"
                         />
-                        Expedite Stage-II Forest Clearance
+                        <span>
+                          Expedite Stage-II Forest Clearance
+                          {plotDetails?.plot_info?.forest_clearance === "Approved" && (
+                            <span className="text-[9px] text-emerald-600 ml-1">(Already Approved)</span>
+                          )}
+                        </span>
                       </label>
                     </div>
 
