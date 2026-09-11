@@ -69,117 +69,128 @@ def generate_synthetic_data(n_samples: int = 1200) -> pd.DataFrame:
     return synthetic_df
 
 
-# 2. Data Loading
-if os.path.exists(CSV_FILE):
-    print(f"Loading existing dataset from '{CSV_FILE}'...")
-    df = pd.read_csv(CSV_FILE)
-else:
-    print(f"'{CSV_FILE}' not found. Generating high-fidelity domain dataset...")
-    df = generate_synthetic_data()
+def train_and_save():
+    # 2. Data Loading
+    if os.path.exists(CSV_FILE):
+        print(f"Loading existing dataset from '{CSV_FILE}'...")
+        df = pd.read_csv(CSV_FILE)
+    else:
+        print(f"'{CSV_FILE}' not found. Generating high-fidelity domain dataset...")
+        df = generate_synthetic_data()
 
-feature_cols = [
-    "stage",
-    "days_elapsed_sec11",
-    "statutory_days_left",
-    "unpartitioned_khata",
-    "court_stay",
-    "forest_clearance",
-    "circle_to_market_ratio",
-    "disbursement_pct",
-]
+    feature_cols = [
+        "stage",
+        "days_elapsed_sec11",
+        "statutory_days_left",
+        "unpartitioned_khata",
+        "court_stay",
+        "forest_clearance",
+        "circle_to_market_ratio",
+        "disbursement_pct",
+    ]
 
-target_col = "delay_days"
+    target_col = "delay_days"
 
-X = df[feature_cols].copy()
-y = df[target_col]
+    X = df[feature_cols].copy()
+    y = df[target_col]
 
-# 3. Categorical Variables One-Hot Encoding
-X_encoded = pd.get_dummies(
-    X, columns=["stage", "forest_clearance"], drop_first=False
-)
-encoded_feature_names = list(X_encoded.columns)
+    # 3. Categorical Variables One-Hot Encoding
+    X_encoded = pd.get_dummies(
+        X, columns=["stage", "forest_clearance"], drop_first=False
+    )
+    encoded_feature_names = list(X_encoded.columns)
 
-# Train-Test Split
-X_train, X_test, y_train, y_test = train_test_split(
-    X_encoded, y, test_size=0.2, random_state=42
-)
+    # Train-Test Split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_encoded, y, test_size=0.2, random_state=42
+    )
 
-# 4. XGBoost Model Training
-model = XGBRegressor(
-    n_estimators=160, 
-    max_depth=5, 
-    learning_rate=0.07, 
-    subsample=0.85,
-    random_state=42
-)
-model.fit(X_train, y_train)
+    # 4. XGBoost Model Training
+    model = XGBRegressor(
+        n_estimators=160, 
+        max_depth=5, 
+        learning_rate=0.07, 
+        subsample=0.85,
+        random_state=42
+    )
+    model.fit(X_train, y_train)
 
-# Evaluation
-y_pred = model.predict(X_test)
-mae = mean_absolute_error(y_test, y_pred)
-r2 = r2_score(y_test, y_pred)
+    # Evaluation
+    y_pred = model.predict(X_test)
+    mae = mean_absolute_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
 
-print("=" * 50)
-print("Model Training Complete!")
-print(f"Mean Absolute Error (MAE): {mae:.2f} days")
-print(f"R2 Score: {r2:.3f}")
-print("=" * 50)
+    print("=" * 50)
+    print("Model Training Complete!")
+    print(f"Mean Absolute Error (MAE): {mae:.2f} days")
+    print(f"R2 Score: {r2:.3f}")
+    print("=" * 50)
 
-# 5. SHAP Explainer
-explainer = shap.TreeExplainer(model)
+    # 5. SHAP Explainer
+    explainer = shap.TreeExplainer(model)
 
-# 6. Export Model & Artifacts
-artifacts = {
-    "model": model,
-    "explainer": explainer,
-    "feature_names": encoded_feature_names,
-    "raw_feature_cols": feature_cols,
-}
-joblib.dump(artifacts, "land_model.joblib")
-print("Successfully serialized model & SHAP artifacts to 'land_model.joblib'")
+    # 6. Export Model & Artifacts
+    artifacts = {
+        "model": model,
+        "explainer": explainer,
+        "feature_names": encoded_feature_names,
+        "raw_feature_cols": feature_cols,
+    }
+    joblib.dump(artifacts, "land_model.joblib")
+    print("Successfully serialized model & SHAP artifacts to 'land_model.joblib'")
+
+    # Also sync into backend folder so FastAPI picks up the newly trained weights immediately
+    backend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backend")
+    if os.path.exists(backend_dir):
+        joblib.dump(artifacts, os.path.join(backend_dir, "land_model.joblib"))
+        print(f"Synced model copy to '{os.path.join(backend_dir, 'land_model.joblib')}'")
 
 
-# ==========================================
-# 7. Validation Test Run
-# ==========================================
-def validate_plot(sample_dict):
-    sample_df = pd.DataFrame([sample_dict])
-    sample_encoded = pd.get_dummies(sample_df)
+    # ==========================================
+    # 7. Validation Test Run
+    # ==========================================
+    def validate_plot(sample_dict):
+        sample_df = pd.DataFrame([sample_dict])
+        sample_encoded = pd.get_dummies(sample_df)
 
-    for col in encoded_feature_names:
-        if col not in sample_encoded.columns:
-            sample_encoded[col] = 0
-    sample_encoded = sample_encoded[encoded_feature_names]
+        for col in encoded_feature_names:
+            if col not in sample_encoded.columns:
+                sample_encoded[col] = 0
+        sample_encoded = sample_encoded[encoded_feature_names]
 
-    pred_delay = float(model.predict(sample_encoded)[0])
-    shap_vals = explainer(sample_encoded).values[0]
+        pred_delay = float(model.predict(sample_encoded)[0])
+        shap_vals = explainer(sample_encoded).values[0]
 
-    impacts = []
-    for feat, imp in zip(encoded_feature_names, shap_vals):
-        if imp > 0:
-            impacts.append({"factor": feat, "impact_days": round(float(imp), 1)})
+        impacts = []
+        for feat, imp in zip(encoded_feature_names, shap_vals):
+            if imp > 0:
+                impacts.append({"factor": feat, "impact_days": round(float(imp), 1)})
 
-    impacts = sorted(impacts, key=lambda x: x["impact_days"], reverse=True)[:3]
-    total_imp = sum(x["impact_days"] for x in impacts) or 1.0
-    for itm in impacts:
-        itm["contribution_pct"] = round((itm["impact_days"] / total_imp) * 100, 1)
+        impacts = sorted(impacts, key=lambda x: x["impact_days"], reverse=True)[:3]
+        total_imp = sum(x["impact_days"] for x in impacts) or 1.0
+        for itm in impacts:
+            itm["contribution_pct"] = round((itm["impact_days"] / total_imp) * 100, 1)
 
-    return {
-        "predicted_delay_days": max(0, round(pred_delay)),
-        "top_bottlenecks": impacts,
+        return {
+            "predicted_delay_days": max(0, round(pred_delay)),
+            "top_bottlenecks": impacts,
+        }
+
+
+    critical_sample = {
+        "stage": "Section 15 (Hearing)",
+        "days_elapsed_sec11": 310,
+        "statutory_days_left": 35,
+        "unpartitioned_khata": 1,
+        "court_stay": 1,
+        "forest_clearance": "Pending",
+        "circle_to_market_ratio": 0.55,
+        "disbursement_pct": 15.0,
     }
 
+    print("\nValidation Test Output:")
+    print(json.dumps(validate_plot(critical_sample), indent=2))
 
-critical_sample = {
-    "stage": "Section 15 (Hearing)",
-    "days_elapsed_sec11": 310,
-    "statutory_days_left": 35,
-    "unpartitioned_khata": 1,
-    "court_stay": 1,
-    "forest_clearance": "Pending",
-    "circle_to_market_ratio": 0.55,
-    "disbursement_pct": 15.0,
-}
 
-print("\nValidation Test Output:")
-print(json.dumps(validate_plot(critical_sample), indent=2))
+if __name__ == "__main__":
+    train_and_save()

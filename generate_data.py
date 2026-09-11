@@ -133,6 +133,17 @@ print("Saved 1500 rows to land_acquisition_data.csv")
 
 # 2. Export 25 mock parcels to JSON for Frontend Dev
 mock_frontend_data = data[:25]
-with open("mockData.json", "w") as f:
+with open("mockData.json", "w", encoding="utf-8") as f:
     json.dump(mock_frontend_data, f, indent=2)
 print("Saved 25 items to mockData.json for Frontend team")
+
+# Keep backend folder in sync
+backend_mock = "backend/mockData.json"
+try:
+    import os
+    if os.path.exists("backend"):
+        with open(backend_mock, "w", encoding="utf-8") as f:
+            json.dump(mock_frontend_data, f, indent=2)
+        print(f"Synced mock dataset to '{backend_mock}'")
+except Exception as e:
+    print(f"Notice: Could not sync to backend: {e}")

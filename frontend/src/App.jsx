@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { MapContainer, TileLayer, GeoJSON, useMap, ZoomControl } from "react-leaflet";
 import { 
@@ -243,8 +243,8 @@ export default function App() {
     axios.get(`${BACKEND_URL}/api/plot/${encodeURIComponent(khasraNo)}`)
       .then(res => {
         setPlotDetails(res.data);
-        setSimDisbursement(res.data.plot_info.disbursement_pct);
-        setResolveKhata(res.data.plot_info.unpartitioned_khata === 1);
+        setSimDisbursement(res.data.plot_info.disbursement_pct ?? 0);
+        setResolveKhata(false);
         setResolveForest(false);
       })
       .catch(err => console.error("Plot details error:", err))
@@ -343,8 +343,8 @@ export default function App() {
   const resetSimulation = () => {
     if (!plotDetails) return;
     setSimResult(null);
-    setSimDisbursement(plotDetails.plot_info.disbursement_pct);
-    setResolveKhata(plotDetails.plot_info.unpartitioned_khata === 1);
+    setSimDisbursement(plotDetails.plot_info.disbursement_pct ?? 0);
+    setResolveKhata(false);
     setResolveForest(false);
   };
 
@@ -928,18 +928,30 @@ export default function App() {
                       <label className="flex items-center gap-2 cursor-pointer text-[11px]">
                         <input
                           type="checkbox"
-                          checked={!resolveKhata}
-                          onChange={(e) => setResolveKhata(!e.target.checked)}
+                          checked={resolveKhata}
+                          onChange={(e) => setResolveKhata(e.target.checked)}
+                          disabled={plotDetails?.plot_info?.unpartitioned_khata === 0}
                         />
-                        Resolve Succession / Title Dispute
+                        <span>
+                          Resolve Succession / Title Dispute
+                          {plotDetails?.plot_info?.unpartitioned_khata === 0 && (
+                            <span className="text-[9px] text-emerald-400 ml-1">(Already Cleared)</span>
+                          )}
+                        </span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer text-[11px]">
                         <input
                           type="checkbox"
                           checked={resolveForest}
                           onChange={(e) => setResolveForest(e.target.checked)}
+                          disabled={plotDetails?.plot_info?.forest_clearance === "Approved"}
                         />
-                        Expedite Stage-II Forest Clearance
+                        <span>
+                          Expedite Stage-II Forest Clearance
+                          {plotDetails?.plot_info?.forest_clearance === "Approved" && (
+                            <span className="text-[9px] text-emerald-400 ml-1">(Already Approved)</span>
+                          )}
+                        </span>
                       </label>
                     </div>
 
