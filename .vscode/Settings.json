@@ -1,0 +1,7 @@
+{
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}",
+    "${workspaceFolder}/backend",
+    "${workspaceFolder}/model train and dataset"
+  ]
+}
